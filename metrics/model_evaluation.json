@@ -1,0 +1,11 @@
+{
+  "model_type": "RandomForestRegressor",
+  "train_samples": 8060,
+  "test_samples": 2016,
+  "mae": 27.8292,
+  "rmse": 65.0507,
+  "spike_threshold": 60.0,
+  "spike_precision": 0.8736,
+  "spike_recall": 0.9647,
+  "spike_f1_score": 0.9169
+}

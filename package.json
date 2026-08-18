@@ -1,0 +1,14 @@
+{
+  "name": "adaptive-prewarming-engine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Adaptive Serverless Pre-Warming Engine for Cloudflare Workers",
+  "scripts": {
+    "dev:target": "wrangler dev worker/target/index.ts --port 8787"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240815.0",
+    "typescript": "^5.5.4",
+    "wrangler": "^3.72.0"
+  }
+}
