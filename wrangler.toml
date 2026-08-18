@@ -5,3 +5,5 @@ compatibility_date = "2024-08-15"
 [[kv_namespaces]]
 binding = "TRAFFIC_KV"
 id = "traffic_kv_id"
+preview_id = "traffic_kv_preview_id"
+
