@@ -11,16 +11,23 @@ export default {
     const startTime = performance.now();
     const now = Date.now();
     
-    // Determine cold start state based on initial boot OR idle timeout
+    // Determine cold start state based on initial boot OR idle timeout (3000ms +/- 300ms jitter)
+    const idleJitter = (Math.random() - 0.5) * 600;
+    const dynamicIdleTimeout = IDLE_TIMEOUT_MS + idleJitter;
     let currentColdState = isColdStart;
-    if (!currentColdState && (now - lastInvocationTime > IDLE_TIMEOUT_MS)) {
+    if (!currentColdState && (now - lastInvocationTime > dynamicIdleTimeout)) {
       currentColdState = true;
     }
 
     if (currentColdState) {
       isColdStart = false;
-      // Simulate isolate cold boot initialization delay (50ms)
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Simulate isolate cold boot initialization delay (45ms to 75ms jitter)
+      const coldDelay = Math.floor(45 + Math.random() * 30);
+      await new Promise((resolve) => setTimeout(resolve, coldDelay));
+    } else {
+      // Simulate micro warm execution jitter (0.8ms to 3.8ms)
+      const warmJitter = 0.8 + Math.random() * 3.0;
+      await new Promise((resolve) => setTimeout(resolve, warmJitter));
     }
     
     lastInvocationTime = Date.now();

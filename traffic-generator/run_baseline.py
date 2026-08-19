@@ -16,19 +16,28 @@ import urllib.request
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from metrics.compute_metrics import compute_metrics_report
 
+import random
+
 stop_naive_warmer = False
 
-def naive_warmer_loop(url: str, interval_sec: float):
+def naive_warmer_loop(url: str, interval_sec: float, records_list: list, records_lock: threading.Lock):
     global stop_naive_warmer
     headers = {"X-Is-Synthetic": "true", "User-Agent": "NaiveWarmer/1.0"}
     while not stop_naive_warmer:
         try:
+            start_t = time.time()
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, timeout=5) as resp:
-                pass
+                resp_bytes = resp.read()
+                data = json.loads(resp_bytes.decode('utf-8'))
+                telemetry = data.get("telemetry", {})
+                if telemetry:
+                    with records_lock:
+                        records_list.append(telemetry)
         except Exception:
             pass
-        time.sleep(interval_sec)
+        jittered_interval = max(0.5, interval_sec + (random.random() - 0.5) * 0.4)
+        time.sleep(jittered_interval)
 
 def run_scenario(mode: str, url: str, num_bursts: int, output_dir: str):
     global stop_naive_warmer
@@ -36,41 +45,50 @@ def run_scenario(mode: str, url: str, num_bursts: int, output_dir: str):
     print(f"   RUNNING BASELINE SCENARIO: Mode = '{mode}'")
     print(f"==================================================")
 
-    # If mode is naive, launch background warmer thread pinging every 2.0s
+    records = []
+    records_lock = threading.Lock()
+
+    # If mode is naive, launch background warmer thread pinging every 2.0s (+/- jitter)
     warmer_thread = None
     if mode == "naive":
         stop_naive_warmer = False
-        warmer_thread = threading.Thread(target=naive_warmer_loop, args=(url, 2.0), daemon=True)
+        warmer_thread = threading.Thread(
+            target=naive_warmer_loop, 
+            args=(url, 2.0, records, records_lock), 
+            daemon=True
+        )
         warmer_thread.start()
-        print("[Naive Warmer] Started background fixed-interval warmer (pinging every 2.0s)")
+        print("[Naive Warmer] Started background fixed-interval warmer (pinging ~2.0s with jitter)")
 
-    records = []
-
-    # Scenario pattern: 4 bursts of requests separated by idle gaps (> 3.5s idle gap to trigger cold start in 'none' mode)
+    # Scenario pattern: multiple bursts of requests separated by dynamic idle gaps
     for burst_idx in range(num_bursts):
-        print(f"\n--> Burst {burst_idx + 1}/{num_bursts} starting...")
+        burst_size = random.randint(8, 13)
+        print(f"\n--> Burst {burst_idx + 1}/{num_bursts} starting ({burst_size} requests)...")
         
-        # 10 requests per burst
-        for r_idx in range(10):
+        for r_idx in range(burst_size):
             req_headers = {"User-Agent": "SyntheticTrafficGen/1.0"}
             req = urllib.request.Request(url, headers=req_headers)
             try:
                 with urllib.request.urlopen(req, timeout=10) as resp:
                     resp_data = json.loads(resp.read().decode('utf-8'))
                     telemetry = resp_data.get("telemetry", {})
-                    records.append(telemetry)
+                    with records_lock:
+                        records.append(telemetry)
                     is_cold = telemetry.get("is_cold", False)
                     lat = telemetry.get("latency_ms", 0.0)
                     cold_label = "COLD" if is_cold else "WARM"
-                    print(f"  Burst {burst_idx+1} | Req #{r_idx+1:02d} | Status: {cold_label:4s} | Latency: {lat:4.1f}ms")
+                    print(f"  Burst {burst_idx+1} | Req #{r_idx+1:02d} | Status: {cold_label:4s} | Latency: {lat:5.1f}ms", flush=True)
             except Exception as e:
-                print(f"  Req failed: {e}")
-            time.sleep(0.05) # 50ms between requests in a burst
+                print(f"  Req failed: {e}", flush=True)
+            
+            req_delay = random.uniform(0.02, 0.07)
+            time.sleep(req_delay)
 
-        # If not the last burst, insert an idle gap of 4.0s (which exceeds IDLE_TIMEOUT_MS = 3000ms)
+        # Insert randomized idle gap between bursts
         if burst_idx < num_bursts - 1:
-            print(f"--> Pausing for 4.0s idle gap (simulating idle interval)...")
-            time.sleep(4.0)
+            idle_gap = random.uniform(3.3, 4.8)
+            print(f"--> Pausing for {idle_gap:.2f}s idle gap (simulating idle interval)...", flush=True)
+            time.sleep(idle_gap)
 
     if mode == "naive" and warmer_thread:
         stop_naive_warmer = True

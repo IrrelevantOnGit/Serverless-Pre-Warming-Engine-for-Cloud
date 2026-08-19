@@ -115,23 +115,30 @@ With `wrangler dev` running, execute the traffic generator script:
 python traffic-generator/generate.py --url http://127.0.0.1:8787 --requests 30 --delay 0.02
 ```
 
-**Expected Output:**
+*(Note: Each execution dynamically randomizes the starting hour, inter-request delays, burst probabilities, and idle lulls to produce realistic, non-redundant traffic patterns.)*
+
+**Sample Terminal Output:**
 ```text
 === Synthetic Traffic Generator Starting ===
 Target URL: http://127.0.0.1:8787
 Total Requests: 30
 Burst Probability: 15.0%
 --------------------------------------------
-Req #001 | Hour 00.0 | Status: COLD | Latency: 51.0ms
-Req #002 | Hour 00.8 | Status: WARM | Latency:  0.0ms
+Req #001 | Hour 02.5 | Status: COLD | Latency:  74.0ms
+Req #002 | Hour 03.3 | Status: WARM | Latency:   2.0ms
+Req #003 | Hour 04.1 | Status: WARM | Latency:   3.0ms
 ...
-Req #005 | Hour 03.2 | Status: WARM | Latency:  0.0ms [BURST]
+Req #005 | Hour 05.7 | Status: WARM | Latency:   1.0ms [BURST]
 ...
-=== Run Complete in 1.37s ===
+--> [Idle Lull] Pausing for 3.70s...
+Req #011 | Hour 10.5 | Status: COLD | Latency:  55.0ms
+...
+=== Run Complete in 8.91s ===
 Total Requests: 30
-Cold Starts:    1 (3.3%)
-Warm Starts:    29
-Average Latency:1.70 ms
+Cold Starts:    3 (10.0%)
+Warm Starts:    27
+Avg Latency:    7.53 ms
+P50 / P95:      2.0 ms / 56.0 ms
 Failures:       0
 ============================================
 ```
@@ -145,19 +152,25 @@ To benchmark "No Warming" against "Fixed 2s Scheduled Warming", run:
 python traffic-generator/run_baseline.py --mode both --url http://127.0.0.1:8787
 ```
 
-**Expected Output Summary:**
+*(Note: Runs randomized burst clusters with dynamic inter-request jitter and idle intervals between bursts.)*
+
+**Sample Output Summary:**
 ```text
 === Metrics Report Saved: none (metrics/baseline_none.json) ===
 Mode:                   none
-Total Real Requests:    40
-Cold Start Rate:        10.0% (4/40)
-P50 / P95 / P99 Latency:0.0ms / 50.0ms / 50.0ms
+Total Real Requests:    30
+Total Synthetic Pings:  0
+Cold Start Rate:        10.0% (3/30)
+P50 / P95 / P99 Latency:2.0ms / 58.0ms / 68.0ms
+Wasted Warm-ups:        0
 
 === Metrics Report Saved: naive (metrics/baseline_naive.json) ===
 Mode:                   naive
-Total Real Requests:    40
-Cold Start Rate:        2.5% (1/40)
-P50 / P95 / P99 Latency:0.0ms / 0.0ms / 30.5ms
+Total Real Requests:    30
+Total Synthetic Pings:  14
+Cold Start Rate:        0.0% (0/30)
+P50 / P95 / P99 Latency:2.0ms / 3.0ms / 3.0ms
+Wasted Warm-ups:        14
 ```
 
 #### Inspect Saved Baseline JSON Metrics:
@@ -165,20 +178,34 @@ P50 / P95 / P99 Latency:0.0ms / 0.0ms / 30.5ms
   ```json
   {
     "mode": "none",
-    "total_real_requests": 40,
-    "cold_start_count": 4,
+    "total_real_requests": 30,
+    "total_synthetic_requests": 0,
+    "total_invocations": 30,
+    "cold_start_count": 3,
+    "warm_start_count": 27,
     "cold_start_rate_percent": 10.0,
-    "p95_latency_ms": 50.0
+    "p50_latency_ms": 2.0,
+    "p95_latency_ms": 58.0,
+    "p99_latency_ms": 68.0,
+    "wasted_warmup_count": 0,
+    "wasted_warmup_rate_percent": 0.0
   }
   ```
 - View `metrics/baseline_naive.json`:
   ```json
   {
     "mode": "naive",
-    "total_real_requests": 40,
-    "cold_start_count": 1,
-    "cold_start_rate_percent": 2.5,
-    "p95_latency_ms": 0.0
+    "total_real_requests": 30,
+    "total_synthetic_requests": 14,
+    "total_invocations": 44,
+    "cold_start_count": 0,
+    "warm_start_count": 30,
+    "cold_start_rate_percent": 0.0,
+    "p50_latency_ms": 2.0,
+    "p95_latency_ms": 3.0,
+    "p99_latency_ms": 3.0,
+    "wasted_warmup_count": 14,
+    "wasted_warmup_rate_percent": 31.82
   }
   ```
 

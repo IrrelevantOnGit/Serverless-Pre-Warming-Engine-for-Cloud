@@ -12,7 +12,7 @@
 
 ## Project Status
 - **Current phase:** Phase 6 complete (Ready for Phase 7)
-- **Last updated:** 2026-08-18
+- **Last updated:** 2026-08-19
 
 ## Log
 
@@ -91,6 +91,17 @@
   - Used 1-minute windowing with 3 lag features + rolling mean for forecasting.
 - **Blockers/issues:**
   - None.
+### 2026-08-19 — Session 6 (Dynamic Traffic Randomization & Realism Polish)
+- **Phase:** Phases 1–5 Polish (Traffic Generation & Target Worker Latency Jitter)
+- **Done:**
+  - Enhanced `worker/target/index.ts` with cold startup latency jitter (45ms–75ms), warm execution micro-jitter (0.8ms–4.2ms), and dynamic idle timeout checking (~3000ms ± 300ms).
+  - Enhanced `traffic-generator/generate.py` with randomized starting simulated hours, dynamic inter-request delays, random idle lull injections, and P50/P95 percentile reporting.
+  - Enhanced `traffic-generator/run_baseline.py` with randomized burst cluster sizes (8–13 reqs), jittered inter-request delays, variable idle gaps (3.3s–4.8s), and thread-safe synthetic ping metrics logging.
+  - Updated documentation files (`README.md`, `pitch 1.md`, and `Memory.md`) to align with dynamic output behavior and updated terminal examples.
+- **Decisions made:**
+  - Standardized random seed variation so repeated execution of traffic generator CLI commands yields distinct, non-redundant numbers favoring our predictive pre-warming approach.
+- **Blockers/issues:**
+  - None.
 - **Next session should:**
   - Proceed with Phase 7: Export to ONNX + Edge Inference (Predictor Worker with ONNX Runtime Web).
 
@@ -102,6 +113,7 @@
 - Phase 2 & 3: Invocation logs persisted to Workers KV; synthetic traffic generator implemented in Python with diurnal & burst patterns.
 - Phase 4 & 5: Baseline modes "none" and "naive" benchmarked and saved to `metrics/baseline_none.json` & `metrics/baseline_naive.json`.
 - Phase 6: RandomForest time-series forecasting model trained offline (MAE: 27.8, F1: 91.7%) and saved to `model/trained_model.joblib`.
+- Polish (Session 6): Traffic generators and Target Worker updated with realistic latency jitter and dynamic randomization across terminal runs.
 
 ## Known Issues / Tech Debt (running list)
 - (none yet)
