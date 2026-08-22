@@ -1,410 +1,330 @@
 [
   {
-    "timestamp": "2026-08-19T04:00:16.422Z",
-    "latency_ms": 74,
-    "cold_or_warm": "cold",
-    "is_cold": true,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:16.532Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:16.611Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:16.675Z",
-    "latency_ms": 2,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:16.737Z",
-    "latency_ms": 2,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:16.799Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:16.878Z",
-    "latency_ms": 3,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:16.941Z",
-    "latency_ms": 3,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:17.004Z",
-    "latency_ms": 3,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:17.051Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:17.099Z",
-    "latency_ms": 2,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:17.178Z",
-    "latency_ms": 3,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:17.224Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:20.769Z",
+    "timestamp": "2026-08-21T05:07:13.027Z",
     "latency_ms": 52,
     "cold_or_warm": "cold",
     "is_cold": true,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:20.892Z",
+    "timestamp": "2026-08-21T05:07:13.105Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:13.183Z",
+    "latency_ms": 3,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:13.262Z",
+    "latency_ms": 3,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:13.340Z",
     "latency_ms": 2,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:20.954Z",
-    "latency_ms": 3,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:21.017Z",
+    "timestamp": "2026-08-21T05:07:13.386Z",
     "latency_ms": 1,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:21.110Z",
+    "timestamp": "2026-08-21T05:07:13.465Z",
     "latency_ms": 2,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:21.207Z",
-    "latency_ms": 0,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:21.269Z",
+    "timestamp": "2026-08-21T05:07:13.512Z",
     "latency_ms": 1,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:21.331Z",
+    "timestamp": "2026-08-21T05:07:13.589Z",
     "latency_ms": 3,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:21.392Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:21.486Z",
+    "timestamp": "2026-08-21T05:07:13.667Z",
     "latency_ms": 2,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:21.579Z",
-    "latency_ms": 3,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:21.674Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:21.727Z",
-    "latency_ms": 0,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:25.779Z",
-    "latency_ms": 57,
-    "cold_or_warm": "cold",
-    "is_cold": true,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:25.842Z",
+    "timestamp": "2026-08-21T05:07:13.745Z",
     "latency_ms": 2,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:25.937Z",
-    "latency_ms": 2,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:26.045Z",
-    "latency_ms": 3,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:26.113Z",
-    "latency_ms": 0,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:26.216Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:26.279Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:26.343Z",
-    "latency_ms": 0,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:26.449Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:26.560Z",
-    "latency_ms": 3,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:26.622Z",
-    "latency_ms": 2,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:26.699Z",
-    "latency_ms": 3,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:26.809Z",
-    "latency_ms": 3,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:31.167Z",
+    "timestamp": "2026-08-21T05:07:18.127Z",
     "latency_ms": 50,
     "cold_or_warm": "cold",
     "is_cold": true,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:31.276Z",
+    "timestamp": "2026-08-21T05:07:18.236Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:18.329Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:18.409Z",
     "latency_ms": 2,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:31.369Z",
+    "timestamp": "2026-08-21T05:07:18.486Z",
     "latency_ms": 3,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:31.432Z",
+    "timestamp": "2026-08-21T05:07:18.580Z",
     "latency_ms": 2,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:31.497Z",
+    "timestamp": "2026-08-21T05:07:18.675Z",
+    "latency_ms": 3,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:18.753Z",
     "latency_ms": 0,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:31.539Z",
+    "timestamp": "2026-08-21T05:07:18.863Z",
+    "latency_ms": 3,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:18.942Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:19.050Z",
+    "latency_ms": 3,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:19.160Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:22.693Z",
+    "latency_ms": 74,
+    "cold_or_warm": "cold",
+    "is_cold": true,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:22.739Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:22.817Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:22.895Z",
+    "latency_ms": 3,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:22.973Z",
+    "latency_ms": 3,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:23.066Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:23.112Z",
+    "latency_ms": 3,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:23.160Z",
+    "latency_ms": 2,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:23.209Z",
     "latency_ms": 0,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:31.635Z",
+    "timestamp": "2026-08-21T05:07:26.971Z",
+    "latency_ms": 50,
+    "cold_or_warm": "cold",
+    "is_cold": true,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:27.066Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:27.128Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:27.206Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:27.269Z",
+    "latency_ms": 3,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:27.362Z",
+    "latency_ms": 1,
+    "cold_or_warm": "warm",
+    "is_cold": false,
+    "is_synthetic": false,
+    "isolate_id": "w84c0pm"
+  },
+  {
+    "timestamp": "2026-08-21T05:07:27.410Z",
     "latency_ms": 2,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:31.744Z",
+    "timestamp": "2026-08-21T05:07:27.518Z",
     "latency_ms": 1,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   },
   {
-    "timestamp": "2026-08-19T04:00:31.807Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:31.918Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:31.981Z",
+    "timestamp": "2026-08-21T05:07:27.628Z",
     "latency_ms": 2,
     "cold_or_warm": "warm",
     "is_cold": false,
     "is_synthetic": false,
-    "isolate_id": "fyh6frb"
-  },
-  {
-    "timestamp": "2026-08-19T04:00:32.059Z",
-    "latency_ms": 1,
-    "cold_or_warm": "warm",
-    "is_cold": false,
-    "is_synthetic": false,
-    "isolate_id": "fyh6frb"
+    "isolate_id": "w84c0pm"
   }
 ]
