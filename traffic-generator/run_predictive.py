@@ -39,7 +39,7 @@ def build_feature_vector(recent_window_counts: list) -> dict:
       [hour_of_day, day_of_week, lag_1, lag_2, lag_3, rolling_mean]
     """
     import datetime
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     counts = recent_window_counts if recent_window_counts else [0]
     lag_1 = float(counts[-1]) if len(counts) >= 1 else 0.0
     lag_2 = float(counts[-2]) if len(counts) >= 2 else lag_1
@@ -113,7 +113,7 @@ def run_predictive_scenario(
 
     for burst_idx in range(num_bursts):
         burst_size = random.randint(8, 13)
-        print(f"── Burst {burst_idx + 1}/{num_bursts}  ({burst_size} real requests) ──────────────────────")
+        print(f"-- Burst {burst_idx + 1}/{num_bursts}  ({burst_size} real requests) --------------------------------")
 
         # ── Step 1: Build feature vector from recent history ────────────────
         features = build_feature_vector(window_counts)
@@ -139,7 +139,7 @@ def run_predictive_scenario(
                 wu_cold  = warmup_result.get("is_cold", "?")
                 wu_lat   = warmup_result.get("latency_ms", "?")
                 wu_status = warmup_result.get("status", "?")
-                print(f"  [Warm-up]   fired → HTTP {wu_status}, cold={wu_cold}, latency={wu_lat}ms")
+                print(f"  [Warm-up]   fired -> HTTP {wu_status}, cold={wu_cold}, latency={wu_lat}ms")
 
                 # Record the synthetic warm-up invocation so metrics engine can track it
                 synthetic_record = {
@@ -209,7 +209,7 @@ def run_predictive_scenario(
     raw_log_path = os.path.join(output_dir, "raw_log_predictive.json")
     with open(raw_log_path, "w") as f:
         json.dump(all_records, f, indent=2)
-    print(f"Raw log saved → {raw_log_path}")
+    print(f"Raw log saved -> {raw_log_path}")
 
     # ── Compute and save metrics report ─────────────────────────────────────
     metrics_path = os.path.join(output_dir, "baseline_predictive.json")

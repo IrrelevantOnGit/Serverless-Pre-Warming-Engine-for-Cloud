@@ -4,7 +4,7 @@ This repository implements a predictive pre-warming engine for serverless edge f
 
 ---
 
-## Current Status (Phases Completed: 0 through 7)
+## Current Status (Phases Completed: 0 through 8)
 
 - **Phase 0:** Project Scaffolding & Wrangler Configured
 - **Phase 1:** Target Worker with V8 Isolate Cold vs. Warm Detection & Timing Instrumentation
@@ -14,6 +14,7 @@ This repository implements a predictive pre-warming engine for serverless edge f
 - **Phase 5:** Baseline Mode "Naive" (Fixed 2.0s Scheduled Warmer benchmarked)
 - **Phase 6:** Offline Time-Series Forecasting Model Trained & Evaluated (MAE: 27.8, F1: 91.7%)
 - **Phase 7:** Export to ONNX & Edge Inference Worker Built (Sub-millisecond Edge Inference & 100% Parity Verified)
+- **Phase 8:** Warm-up Dispatcher Worker Built & Predictive Pipeline Verified (0% Cold Starts, 9.3% Wasted Warm-ups)
 
 ---
 
@@ -351,6 +352,126 @@ python model/test_predictor.py
 
 ---
 
+### Step 7: Run the Full Predictive Pre-Warming Pipeline
+
+This step runs the complete Phase 8 predictive pipeline end-to-end:
+**Dispatcher → Predictor → (if spike predicted) → warm-up → Target → real traffic burst**
+
+#### 1. Ensure all three Workers are running (in three separate terminals):
+```bash
+npm run dev:target       # Terminal 1: Target Worker on port 8787
+npm run dev:predictor    # Terminal 2: Predictor Worker on port 8788
+npm run dev:dispatcher   # Terminal 3: Dispatcher Worker on port 8789
+```
+
+#### 2. (Optional) Smoke-test the Dispatcher Worker directly:
+```bash
+python -c "
+import json, urllib.request
+payload = json.dumps({'hour_of_day': 14, 'day_of_week': 1, 'lag_1': 75.0, 'lag_2': 80.0, 'lag_3': 70.0, 'rolling_mean': 75.0}).encode()
+req = urllib.request.Request('http://127.0.0.1:8789', data=payload, headers={'Content-Type': 'application/json'}, method='POST')
+with urllib.request.urlopen(req, timeout=8) as r:
+    print(r.read().decode())
+"
+```
+
+**Expected Output (spike predicted, warm-up fired):**
+```json
+{
+  "timestamp": "2026-08-25T18:28:06.335Z",
+  "prediction": {
+    "predicted_count": 91.63,
+    "spike_threshold": 60,
+    "is_spike_predicted": true,
+    "spike_probability": 1,
+    "latency_ms": 7
+  },
+  "dispatch_decision": "warmup_fired",
+  "warmup_result": {
+    "status": 200,
+    "is_cold": true,
+    "latency_ms": 53
+  },
+  "total_latency_ms": 151
+}
+```
+
+#### 3. Run the Predictive Mode Traffic Scenario:
+```bash
+python traffic-generator/run_predictive.py --bursts 4
+```
+
+**Sample Output:**
+```text
+==================================================
+   RUNNING PREDICTIVE SCENARIO (Phase 8)
+==================================================
+Dispatcher : http://127.0.0.1:8789
+Target     : http://127.0.0.1:8787
+Bursts     : 4
+--------------------------------------------------
+
+-- Burst 1/4  (8 real requests) --------------------------------
+  [Features] hour=18, day=0, lag=[0.0, 0.0, 0.0], rolling_mean=0.0
+  [Predictor] predicted_count=71.98, is_spike=True, prob=0.7998
+  [Dispatcher] decision=warmup_fired
+  [Warm-up]   fired -> HTTP 200, cold=True, latency=67ms
+  Req #01 | WARM |    2.0ms
+  Req #02 | WARM |    2.0ms
+  ...
+  --> Idle gap 4.27s (isolate eviction window)...
+...
+==================================================
+   PREDICTIVE RUN COMPLETE
+==================================================
+  Real requests      : 39
+  Synthetic warm-ups : 4
+  Cold starts        : 0 (0.0%)
+  Warm-ups fired     : 4
+  Cold-starts avoided: 4 (first-req-warm after dispatch)
+==================================================
+
+Raw log saved -> metrics\raw_log_predictive.json
+=== Metrics Report Saved: predictive (metrics\baseline_predictive.json) ===
+Mode:                   predictive
+Total Real Requests:    39
+Total Synthetic Pings:  4
+Cold Start Rate:        0.0% (0/39)
+P50 / P95 / P99 Latency:2.0ms / 3.0ms / 3.0ms
+Wasted Warm-ups:        4
+```
+
+#### Inspect Saved Predictive Metrics:
+View `metrics/baseline_predictive.json`:
+```json
+{
+  "mode": "predictive",
+  "total_real_requests": 39,
+  "total_synthetic_requests": 4,
+  "total_invocations": 43,
+  "cold_start_count": 0,
+  "warm_start_count": 39,
+  "cold_start_rate_percent": 0.0,
+  "p50_latency_ms": 2,
+  "p95_latency_ms": 3.0,
+  "p99_latency_ms": 3.0,
+  "wasted_warmup_count": 4,
+  "wasted_warmup_rate_percent": 9.3
+}
+```
+
+#### Three-Way Baseline Comparison (None vs. Naive vs. Predictive):
+
+| Metric | None | Naive | **Predictive** |
+|---|---|---|---|
+| Cold Start Rate | 10.0% | 0.0% | **0.0%** |
+| P95 Latency | 58ms | 3ms | **3ms** |
+| Wasted Warm-ups | 0 | 14 (31.82%) | **4 (9.3%)** |
+
+*Predictive mode matches Naive's cold-start elimination with **~71% fewer wasted warm-up invocations**.*
+
+---
+
 ## Folder Structure
 
 ```
@@ -365,6 +486,8 @@ Serverless Pre-Warming Engine for Cloud/
 │   │   └── index.ts          # Target Worker (telemetry + idle cold detection)
 │   ├── predictor/
 │   │   └── index.ts          # Edge Inference Predictor Worker
+│   ├── dispatcher/
+│   │   └── index.ts          # Warm-up Dispatcher Worker (Phase 8)
 │   ├── naive-warmer/
 │   │   └── index.ts          # Naive fixed-interval warmer
 │   └── shared/
@@ -379,10 +502,12 @@ Serverless Pre-Warming Engine for Cloud/
 │   └── model_trees.json      # Edge-optimized tree model payload
 ├── traffic-generator/
 │   ├── generate.py           # Synthetic traffic generator (diurnal + bursts)
-│   └── run_baseline.py       # Baseline scenario execution script
+│   ├── run_baseline.py       # Baseline (None/Naive) scenario runner
+│   └── run_predictive.py     # Predictive mode scenario runner (Phase 8)
 └── metrics/
     ├── compute_metrics.py    # Metrics engine calculation script
     ├── baseline_none.json    # Metrics output for "None" mode
     ├── baseline_naive.json   # Metrics output for "Naive" mode
+    ├── baseline_predictive.json # Metrics output for "Predictive" mode
     └── model_evaluation.json # Evaluation output for forecasting model
 ```

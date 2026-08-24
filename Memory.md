@@ -11,8 +11,8 @@
 ---
 
 ## Project Status
-- **Current phase:** Phase 7 complete (Ready for Phase 8)
-- **Last updated:** 2026-08-24
+- **Current phase:** Phase 8 complete (Ready for Phase 9)
+- **Last updated:** 2026-08-25
 
 ## Log
 
@@ -124,6 +124,25 @@
 - **Next session should:**
   - Proceed with Phase 8: Warm-up Dispatcher (Predictive Mode pipeline integration).
 
+### 2026-08-25 — Session 8 (Phase 8 Execution)
+- **Phase:** Phase 8 — Warm-up Dispatcher (Predictive Mode)
+- **Done:**
+  - Created `worker/dispatcher/index.ts`: Dispatcher Worker on port 8789. Accepts GET/POST with feature vector, calls Predictor Worker, fires synthetic warm-up to Target Worker if `is_spike_predicted: true`, returns structured JSON decision log.
+  - Added `"dev:dispatcher"` npm script to `package.json` (wrangler dev on port 8789).
+  - Created `traffic-generator/run_predictive.py`: Runs 4-burst traffic scenario with pre-burst Dispatcher calls, adaptive lag feature vector tracking, and unified record collection for real + synthetic invocations. Saves raw log + metrics to `metrics/raw_log_predictive.json` & `metrics/baseline_predictive.json`.
+  - Verified full end-to-end pipeline:
+    - Dispatcher called Predictor → `predicted_count: ~72`, `is_spike_predicted: true`, `prob: ~0.80`.
+    - Dispatcher fired warm-up before each burst → warm-up absorbed every cold start.
+    - Real traffic results: 39 requests, **0 cold starts (0.0%)**, P50/P95/P99: 2ms/3ms/3ms, wasted warm-up rate: **9.3%** (vs 31.82% for Naive).
+- **Decisions made:**
+  - Dispatcher is a standalone Worker (not embedded in Target) per single-purpose Rule 6 and Architecture.md.
+  - Dispatcher calls Predictor synchronously (awaits prediction) then fires warm-up — total latency < 200ms, safely non-blocking for real traffic.
+  - `run_predictive.py` tracks a rolling window of per-burst request counts (last 10) to build realistic lag feature vectors for the Predictor.
+- **Blockers/issues:**
+  - Windows cp1252 encoding: replaced Unicode box-drawing/arrow chars with ASCII equivalents in run_predictive.py.
+- **Next session should:**
+  - Proceed with Phase 9: Metrics Engine (extend compute_metrics.py to support 3-way comparison: none vs naive vs predictive, output a unified comparison report).
+
 ---
 
 ## Key Decisions Reference (running list, most important ones only)
@@ -134,6 +153,7 @@
 - Phase 6: RandomForest time-series forecasting model trained offline (MAE: 27.8, F1: 91.7%) and saved to `model/trained_model.joblib`.
 - Polish (Session 6): Traffic generators and Target Worker updated with realistic latency jitter and dynamic randomization across terminal runs.
 - Phase 7: Exported ONNX model & edge tree payload (`model_trees.json`). Built Predictor Worker with sub-millisecond edge inference, verified via automated test suite.
+- Phase 8: Built Dispatcher Worker (port 8789) connecting Predictor output to Target warm-up dispatch. Created `run_predictive.py` for predictive mode traffic runs. Verified 0% cold starts & 9.3% wasted warm-up rate (vs 31.82% for Naive).
 
 ## Known Issues / Tech Debt (running list)
 - (none yet)

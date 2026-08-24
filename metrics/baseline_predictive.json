@@ -1,0 +1,14 @@
+{
+  "mode": "predictive",
+  "total_real_requests": 39,
+  "total_synthetic_requests": 4,
+  "total_invocations": 43,
+  "cold_start_count": 0,
+  "warm_start_count": 39,
+  "cold_start_rate_percent": 0.0,
+  "p50_latency_ms": 2,
+  "p95_latency_ms": 3.0,
+  "p99_latency_ms": 3.0,
+  "wasted_warmup_count": 4,
+  "wasted_warmup_rate_percent": 9.3
+}
