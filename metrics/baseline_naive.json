@@ -1,14 +1,14 @@
 {
   "mode": "naive",
   "total_real_requests": 44,
-  "total_synthetic_requests": 8,
-  "total_invocations": 52,
+  "total_synthetic_requests": 9,
+  "total_invocations": 53,
   "cold_start_count": 1,
   "warm_start_count": 43,
   "cold_start_rate_percent": 2.27,
   "p50_latency_ms": 2.0,
   "p95_latency_ms": 3.0,
-  "p99_latency_ms": 39.48,
-  "wasted_warmup_count": 8,
-  "wasted_warmup_rate_percent": 15.38
+  "p99_latency_ms": 29.79,
+  "wasted_warmup_count": 9,
+  "wasted_warmup_rate_percent": 16.98
 }

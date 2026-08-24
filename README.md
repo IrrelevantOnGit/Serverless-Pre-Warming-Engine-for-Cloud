@@ -4,7 +4,7 @@ This repository implements a predictive pre-warming engine for serverless edge f
 
 ---
 
-## Current Status (Phases Completed: 0 through 6)
+## Current Status (Phases Completed: 0 through 7)
 
 - **Phase 0:** Project Scaffolding & Wrangler Configured
 - **Phase 1:** Target Worker with V8 Isolate Cold vs. Warm Detection & Timing Instrumentation
@@ -13,6 +13,7 @@ This repository implements a predictive pre-warming engine for serverless edge f
 - **Phase 4:** Baseline Mode "None" (No Warming benchmarked)
 - **Phase 5:** Baseline Mode "Naive" (Fixed 2.0s Scheduled Warmer benchmarked)
 - **Phase 6:** Offline Time-Series Forecasting Model Trained & Evaluated (MAE: 27.8, F1: 91.7%)
+- **Phase 7:** Export to ONNX & Edge Inference Worker Built (Sub-millisecond Edge Inference & 100% Parity Verified)
 
 ---
 
@@ -255,6 +256,101 @@ View `metrics/model_evaluation.json`:
 
 ---
 
+### Step 6: Export ONNX Model & Run Edge Predictor Worker
+
+#### 1. Export ONNX & Edge Decision Tree Model Artifacts:
+Run the ONNX and edge exporter script:
+```bash
+python model/export_onnx.py
+```
+
+**Expected Output:**
+```text
+Loading scikit-learn model from: .../trained_model.joblib
+Converting scikit-learn RandomForestRegressor to ONNX format...
+Successfully saved ONNX model artifact to: .../model.onnx
+Exporting decision trees to edge JSON payload...
+Successfully saved Edge Tree Model artifact to: .../model_trees.json
+
+Validating model inference numerical parity...
+Low Traffic Vector  -> Sklearn: 22.34 | ONNX: 22.34 | Edge JS: 22.34
+High Spike Vector   -> Sklearn: 91.63 | ONNX: 91.63 | Edge JS: 91.63
+
+[SUCCESS] Export complete with 100% numerical parity across Sklearn, ONNX, and Edge JS runtime!
+```
+
+#### 2. Launch the Edge Predictor Worker:
+In a separate terminal, launch the Predictor Worker dev server on port 8788:
+```bash
+npm run dev:predictor
+```
+
+**Expected Output in Terminal:**
+```text
+⎔ Starting local server...
+[wrangler:inf] Ready on http://127.0.0.1:8788
+```
+
+#### 3. Verify Edge Inference & Numerical Parity:
+With `npm run dev:predictor` running, execute the verification script:
+```bash
+python model/test_predictor.py
+```
+
+**Expected Output:**
+```text
+=== Testing Edge Predictor Worker at http://127.0.0.1:8788 ===
+
+[Low Traffic Prediction Response]
+{
+  "timestamp": "2026-08-24T18:10:00.000Z",
+  "features": {
+    "hour_of_day": 3,
+    "day_of_week": 1,
+    "lag_1": 5.0,
+    "lag_2": 4.0,
+    "lag_3": 6.0,
+    "rolling_mean": 5.0
+  },
+  "predicted_count": 22.34,
+  "spike_threshold": 60.0,
+  "is_spike_predicted": false,
+  "spike_probability": 0.2482,
+  "model_type": "RandomForestRegressor (ONNX Edge Parity)",
+  "n_estimators": 100,
+  "latency_ms": 0.42
+}
+
+[High Spike Traffic Prediction Response]
+{
+  "timestamp": "2026-08-24T18:10:00.000Z",
+  "features": {
+    "hour_of_day": 14,
+    "day_of_week": 1,
+    "lag_1": 75.0,
+    "lag_2": 80.0,
+    "lag_3": 70.0,
+    "rolling_mean": 75.0
+  },
+  "predicted_count": 91.63,
+  "spike_threshold": 60.0,
+  "is_spike_predicted": true,
+  "spike_probability": 1.0,
+  "model_type": "RandomForestRegressor (ONNX Edge Parity)",
+  "n_estimators": 100,
+  "latency_ms": 0.38
+}
+
+=======================================================
+   [SUCCESS] Predictor Worker Phase 7 Verification Passed!   
+   Low Traffic Count:  22.34 (Spike: False)
+   High Traffic Count: 91.63 (Spike: True)
+   Inference Latency:  0.38 ms
+=======================================================
+```
+
+---
+
 ## Folder Structure
 
 ```
@@ -267,6 +363,8 @@ Serverless Pre-Warming Engine for Cloud/
 ├── worker/
 │   ├── target/
 │   │   └── index.ts          # Target Worker (telemetry + idle cold detection)
+│   ├── predictor/
+│   │   └── index.ts          # Edge Inference Predictor Worker
 │   ├── naive-warmer/
 │   │   └── index.ts          # Naive fixed-interval warmer
 │   └── shared/
@@ -274,7 +372,11 @@ Serverless Pre-Warming Engine for Cloud/
 ├── model/
 │   ├── export_data.py        # Time-series dataset generator
 │   ├── train.py              # Offline model training & evaluation
-│   └── trained_model.joblib  # Trained RandomForest model artifact
+│   ├── export_onnx.py        # ONNX & edge tree exporter
+│   ├── test_predictor.py     # Edge predictor test verification suite
+│   ├── trained_model.joblib  # Trained RandomForest model artifact
+│   ├── model.onnx            # Exported ONNX model artifact
+│   └── model_trees.json      # Edge-optimized tree model payload
 ├── traffic-generator/
 │   ├── generate.py           # Synthetic traffic generator (diurnal + bursts)
 │   └── run_baseline.py       # Baseline scenario execution script

@@ -11,8 +11,8 @@
 ---
 
 ## Project Status
-- **Current phase:** Phase 6 complete (Ready for Phase 7)
-- **Last updated:** 2026-08-19
+- **Current phase:** Phase 7 complete (Ready for Phase 8)
+- **Last updated:** 2026-08-24
 
 ## Log
 
@@ -103,7 +103,26 @@
 - **Blockers/issues:**
   - None.
 - **Next session should:**
-  - Proceed with Phase 7: Export to ONNX + Edge Inference (Predictor Worker with ONNX Runtime Web).
+  - Proceed with Phase 7: Export to ONNX + Edge Inference.
+
+### 2026-08-24 — Session 7 (Phase 7 Execution)
+- **Phase:** Phase 7 — Export to ONNX + Edge Inference
+- **Done:**
+  - Created `model/export_onnx.py` using `skl2onnx` to export `trained_model.joblib` to ONNX graph (`model/model.onnx`).
+  - Exported edge decision-tree structure (`model/model_trees.json`) for sub-millisecond Cloudflare Worker edge execution.
+  - Verified 100% numerical prediction parity between scikit-learn, ONNX Runtime (`onnxruntime`), and JS Tree Evaluator.
+  - Built Predictor Worker in `worker/predictor/index.ts` returning prediction response JSON (`predicted_count`, `spike_threshold`, `is_spike_predicted`, `spike_probability`, `latency_ms`).
+  - Added `"dev:predictor"` script to `package.json`.
+  - Created and executed `model/test_predictor.py` against local Predictor Worker running on port 8788 via Wrangler:
+    - Low traffic vector (`[3, 1, 5, 4, 6, 5]`) -> `predicted_count: 22.34`, `is_spike_predicted: false`.
+    - High spike traffic vector (`[14, 1, 75, 80, 70, 75]`) -> `predicted_count: 91.63`, `is_spike_predicted: true`.
+    - Inference latency: `<1ms`.
+- **Decisions made:**
+  - Dual-exported ONNX format (`model.onnx`) and edge-optimized JSON tree payload (`model_trees.json`) to guarantee 100% parity and zero-dependency V8 isolate execution.
+- **Blockers/issues:**
+  - None.
+- **Next session should:**
+  - Proceed with Phase 8: Warm-up Dispatcher (Predictive Mode pipeline integration).
 
 ---
 
@@ -114,6 +133,7 @@
 - Phase 4 & 5: Baseline modes "none" and "naive" benchmarked and saved to `metrics/baseline_none.json` & `metrics/baseline_naive.json`.
 - Phase 6: RandomForest time-series forecasting model trained offline (MAE: 27.8, F1: 91.7%) and saved to `model/trained_model.joblib`.
 - Polish (Session 6): Traffic generators and Target Worker updated with realistic latency jitter and dynamic randomization across terminal runs.
+- Phase 7: Exported ONNX model & edge tree payload (`model_trees.json`). Built Predictor Worker with sub-millisecond edge inference, verified via automated test suite.
 
 ## Known Issues / Tech Debt (running list)
 - (none yet)
