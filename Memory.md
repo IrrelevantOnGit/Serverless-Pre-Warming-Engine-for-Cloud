@@ -11,8 +11,8 @@
 ---
 
 ## Project Status
-- **Current phase:** Phase 8 complete (Ready for Phase 9)
-- **Last updated:** 2026-08-25
+- **Current phase:** Phase 9 complete (Ready for Phase 10)
+- **Last updated:** 2026-08-31
 
 ## Log
 
@@ -143,6 +143,24 @@
 - **Next session should:**
   - Proceed with Phase 9: Metrics Engine (extend compute_metrics.py to support 3-way comparison: none vs naive vs predictive, output a unified comparison report).
 
+### 2026-08-31 — Session 9 (Phase 9 Execution)
+- **Phase:** Phase 9 — Metrics Engine
+- **Done:**
+  - Enhanced `metrics/compute_metrics.py` to support comprehensive 3-way telemetry comparison (`none` vs `naive` vs `predictive`).
+  - Added calculation of cold starts avoided, wasted warm-up rates, and Net Invocation Efficiency Ratio (`cold_starts_avoided / synthetic_pings`).
+  - Added automated export of single-mode JSONs (`baseline_none.json`, `baseline_naive.json`, `baseline_predictive.json`) along with unified side-by-side comparison artifacts: `metrics/comparison_report.json` and `metrics/comparison_report.csv`.
+  - Added CLI `--metrics-dir` support and a terminal summary table output.
+  - Verified multi-mode metrics aggregation against actual run logs:
+    - Cold Start Rate: None (9.52%) vs Naive (2.27%) vs **Predictive (0.0%)** (100% reduction vs None).
+    - Wasted Warm-up Reduction: Predictive issued 4 pings vs Naive's 9 (**55.56% reduction**).
+    - Net Invocation Efficiency: Predictive (**1.0x**) vs Naive (**0.33x**).
+- **Decisions made:**
+  - Standardized unified comparison outputs in both JSON format (`comparison_report.json`) for dashboard/API consumption and CSV format (`comparison_report.csv`) for tabular reporting.
+- **Blockers/issues:**
+  - None.
+- **Next session should:**
+  - Proceed with Phase 10: Dashboard (Single Screen dashboard UI displaying timeline, prediction markers, warm-up events, and 3-way metrics comparison).
+
 ---
 
 ## Key Decisions Reference (running list, most important ones only)
@@ -154,6 +172,7 @@
 - Polish (Session 6): Traffic generators and Target Worker updated with realistic latency jitter and dynamic randomization across terminal runs.
 - Phase 7: Exported ONNX model & edge tree payload (`model_trees.json`). Built Predictor Worker with sub-millisecond edge inference, verified via automated test suite.
 - Phase 8: Built Dispatcher Worker (port 8789) connecting Predictor output to Target warm-up dispatch. Created `run_predictive.py` for predictive mode traffic runs. Verified 0% cold starts & 9.3% wasted warm-up rate (vs 31.82% for Naive).
+- Phase 9: Enhanced Metrics Engine (`metrics/compute_metrics.py`) to generate side-by-side comparative analysis reports (`metrics/comparison_report.json` and `metrics/comparison_report.csv`) covering cold start rates, latency percentiles, wasted warm-ups, and Net Invocation Efficiency.
 
 ## Known Issues / Tech Debt (running list)
 - (none yet)

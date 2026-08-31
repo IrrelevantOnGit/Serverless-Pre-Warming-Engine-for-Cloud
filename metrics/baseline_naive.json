@@ -1,14 +1,17 @@
 {
   "mode": "naive",
-  "total_real_requests": 44,
+  "total_real_requests": 47,
   "total_synthetic_requests": 9,
-  "total_invocations": 53,
+  "total_invocations": 56,
   "cold_start_count": 1,
-  "warm_start_count": 43,
-  "cold_start_rate_percent": 2.27,
+  "warm_start_count": 46,
+  "cold_start_rate_percent": 2.13,
+  "avg_latency_ms": 3.13,
   "p50_latency_ms": 2.0,
   "p95_latency_ms": 3.0,
-  "p99_latency_ms": 29.79,
+  "p99_latency_ms": 32.16,
   "wasted_warmup_count": 9,
-  "wasted_warmup_rate_percent": 16.98
+  "wasted_warmup_rate_percent": 16.07,
+  "cold_starts_avoided": 3,
+  "net_invocation_efficiency_ratio": 0.33
 }

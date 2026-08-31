@@ -4,7 +4,7 @@ This repository implements a predictive pre-warming engine for serverless edge f
 
 ---
 
-## Current Status (Phases Completed: 0 through 8)
+## Current Status (Phases Completed: 0 through 9)
 
 - **Phase 0:** Project Scaffolding & Wrangler Configured
 - **Phase 1:** Target Worker with V8 Isolate Cold vs. Warm Detection & Timing Instrumentation
@@ -15,6 +15,7 @@ This repository implements a predictive pre-warming engine for serverless edge f
 - **Phase 6:** Offline Time-Series Forecasting Model Trained & Evaluated (MAE: 27.8, F1: 91.7%)
 - **Phase 7:** Export to ONNX & Edge Inference Worker Built (Sub-millisecond Edge Inference & 100% Parity Verified)
 - **Phase 8:** Warm-up Dispatcher Worker Built & Predictive Pipeline Verified (0% Cold Starts, 9.3% Wasted Warm-ups)
+- **Phase 9:** Metrics Engine & Side-by-Side Comparison Generator Built (`comparison_report.json` and `comparison_report.csv`)
 
 ---
 
@@ -460,15 +461,54 @@ View `metrics/baseline_predictive.json`:
 }
 ```
 
-#### Three-Way Baseline Comparison (None vs. Naive vs. Predictive):
+---
 
-| Metric | None | Naive | **Predictive** |
-|---|---|---|---|
-| Cold Start Rate | 10.0% | 0.0% | **0.0%** |
-| P95 Latency | 58ms | 3ms | **3ms** |
-| Wasted Warm-ups | 0 | 14 (31.82%) | **4 (9.3%)** |
+### Step 8: Generate Three-Way Comparative Metrics Report
 
-*Predictive mode matches Naive's cold-start elimination with **~71% fewer wasted warm-up invocations**.*
+Run the Metrics Engine script to aggregate execution telemetry from all three modes (`none`, `naive`, `predictive`) and compute cold-start rates, latency percentiles, wasted warm-up rates, and net invocation efficiency:
+
+```bash
+python metrics/compute_metrics.py
+```
+
+**Expected Terminal Summary Output:**
+```text
+==========================================================================
+        THREE-WAY PREDICTIVE PRE-WARMING METRICS COMPARISON REPORT        
+==========================================================================
+ Report Generated At: 2026-08-31T17:56:44.494520+00:00
+ JSON Output: metrics\comparison_report.json
+ CSV Output:  metrics\comparison_report.csv
+--------------------------------------------------------------------------
+Metric                              | None       | Naive      | Predictive
+--------------------------------------------------------------------------
+Total Real Requests                 | 42         | 44         | 39        
+Synthetic Warm-up Pings             | 0          | 9          | 4         
+Total Invocations                   | 42         | 53         | 43        
+Cold Starts Count                   | 4          | 1          | 0         
+Cold Start Rate (%)                 | 9.52%      | 2.27%      | 0.0%      
+Avg Latency (ms)                    | 6.71 ms    | 2.77 ms    | 2.03 ms   
+P50 Latency (ms)                    | 2.0 ms     | 2.0 ms     | 2.0 ms    
+P95 Latency (ms)                    | 46.95 ms   | 3.0 ms     | 3.0 ms    
+P99 Latency (ms)                    | 59.85 ms   | 29.79 ms   | 3.0 ms    
+Wasted Warm-ups                     | 0          | 9          | 4         
+Wasted Warm-up Rate (%)             | 0.0%       | 16.98%     | 9.3%      
+Cold Starts Avoided                 | 0          | 3          | 4         
+Net Invocation Efficiency Ratio     | 0.0x       | 0.33x      | 1.0x      
+--------------------------------------------------------------------------
+ Summary Key Takeaways:
+  - Cold Start Reduction (Predictive vs None):   100.0%
+  - Wasted Warm-up Reduction (Predictive vs Naive): 55.56%
+  - Net Invocation Efficiency (Predictive):      1.0x
+ Model Forecasting Accuracy:
+  - MAE: 27.8292 | RMSE: 65.0507
+  - Spike Precision: 87.4% | Recall: 96.5% | F1: 91.7%
+==========================================================================
+```
+
+#### Inspect Generated Comparative Reports:
+- View `metrics/comparison_report.json`: Side-by-side JSON report with metadata & model metrics.
+- View `metrics/comparison_report.csv`: Tabular CSV output for data analysis and chart generation.
 
 ---
 
@@ -505,9 +545,11 @@ Serverless Pre-Warming Engine for Cloud/
 │   ├── run_baseline.py       # Baseline (None/Naive) scenario runner
 │   └── run_predictive.py     # Predictive mode scenario runner (Phase 8)
 └── metrics/
-    ├── compute_metrics.py    # Metrics engine calculation script
-    ├── baseline_none.json    # Metrics output for "None" mode
-    ├── baseline_naive.json   # Metrics output for "Naive" mode
+    ├── compute_metrics.py       # Metrics engine calculation script
+    ├── baseline_none.json       # Metrics output for "None" mode
+    ├── baseline_naive.json      # Metrics output for "Naive" mode
     ├── baseline_predictive.json # Metrics output for "Predictive" mode
-    └── model_evaluation.json # Evaluation output for forecasting model
+    ├── model_evaluation.json    # Evaluation output for forecasting model
+    ├── comparison_report.json   # Unified 3-way comparative JSON report
+    └── comparison_report.csv    # Side-by-side comparative CSV dataset
 ```

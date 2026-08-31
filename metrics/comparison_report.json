@@ -1,0 +1,73 @@
+{
+  "generated_at": "2026-08-31T18:03:02.367983+00:00",
+  "modes": {
+    "none": {
+      "mode": "none",
+      "total_real_requests": 42,
+      "total_synthetic_requests": 0,
+      "total_invocations": 42,
+      "cold_start_count": 4,
+      "warm_start_count": 38,
+      "cold_start_rate_percent": 9.52,
+      "avg_latency_ms": 6.98,
+      "p50_latency_ms": 2.0,
+      "p95_latency_ms": 54.9,
+      "p99_latency_ms": 58.95,
+      "wasted_warmup_count": 0,
+      "wasted_warmup_rate_percent": 0.0,
+      "cold_starts_avoided": 0,
+      "net_invocation_efficiency_ratio": 0.0
+    },
+    "naive": {
+      "mode": "naive",
+      "total_real_requests": 47,
+      "total_synthetic_requests": 9,
+      "total_invocations": 56,
+      "cold_start_count": 1,
+      "warm_start_count": 46,
+      "cold_start_rate_percent": 2.13,
+      "avg_latency_ms": 3.13,
+      "p50_latency_ms": 2.0,
+      "p95_latency_ms": 3.0,
+      "p99_latency_ms": 32.16,
+      "wasted_warmup_count": 9,
+      "wasted_warmup_rate_percent": 16.07,
+      "cold_starts_avoided": 3,
+      "net_invocation_efficiency_ratio": 0.33
+    },
+    "predictive": {
+      "mode": "predictive",
+      "total_real_requests": 41,
+      "total_synthetic_requests": 4,
+      "total_invocations": 45,
+      "cold_start_count": 0,
+      "warm_start_count": 41,
+      "cold_start_rate_percent": 0.0,
+      "avg_latency_ms": 1.66,
+      "p50_latency_ms": 1.0,
+      "p95_latency_ms": 3.0,
+      "p99_latency_ms": 3.0,
+      "wasted_warmup_count": 4,
+      "wasted_warmup_rate_percent": 8.89,
+      "cold_starts_avoided": 4,
+      "net_invocation_efficiency_ratio": 1.0
+    }
+  },
+  "forecasting_model": {
+    "model_type": "RandomForestRegressor",
+    "train_samples": 8060,
+    "test_samples": 2016,
+    "mae": 27.8292,
+    "rmse": 65.0507,
+    "spike_threshold": 60.0,
+    "spike_precision": 0.8736,
+    "spike_recall": 0.9647,
+    "spike_f1_score": 0.9169
+  },
+  "summary": {
+    "predictive_vs_none_cold_start_reduction_percent": 100.0,
+    "predictive_vs_naive_wasted_warmup_reduction_percent": 55.56,
+    "net_invocation_efficiency_predictive": 1.0,
+    "net_invocation_efficiency_naive": 0.33
+  }
+}
