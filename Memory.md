@@ -12,7 +12,7 @@
 
 ## Project Status
 - **Current phase:** Phase 9 complete (Ready for Phase 10)
-- **Last updated:** 2026-08-31
+- **Last updated:** 2026-09-02
 
 ## Log
 
@@ -159,7 +159,19 @@
 - **Blockers/issues:**
   - None.
 - **Next session should:**
-  - Proceed with Phase 10: Dashboard (Single Screen dashboard UI displaying timeline, prediction markers, warm-up events, and 3-way metrics comparison).
+  - Proceed with Phase 10: Dashboard UI or Phase 11 Deployment.
+
+### 2026-09-02 — Session 11 (Phase 10 UI Rollback & Live Terminal Demo)
+- **Phase:** Phase 9 Complete / Phase 10 UI Rollback
+- **Done:**
+  - Rolled back Phase 10 React dashboard per user request by removing the `dashboard/` directory.
+  - Re-launched local emulation background daemons (Target Worker on 8787, Predictor Worker on 8788, Dispatcher Worker on 8789).
+  - Executed end-to-end live terminal demo across all 3 modes (`none`, `naive`, `predictive`).
+  - Generated and printed 3-way comparative metrics report (`metrics/comparison_report.json` and `metrics/comparison_report.csv`).
+- **Decisions made:**
+  - UI dashboard updates removed.
+- **Next session should:**
+  - Re-evaluate Phase 10 UI options or proceed directly to Phase 11 deployment.
 
 ---
 
