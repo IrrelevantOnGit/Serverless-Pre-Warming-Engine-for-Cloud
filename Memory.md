@@ -11,8 +11,8 @@
 ---
 
 ## Project Status
-- **Current phase:** Phase 9 complete (Ready for Phase 10)
-- **Last updated:** 2026-09-02
+- **Current phase:** Phase 10 complete (Ready for Phase 11 / 12)
+- **Last updated:** 2026-10-15
 
 ## Log
 
@@ -170,8 +170,30 @@
   - Generated and printed 3-way comparative metrics report (`metrics/comparison_report.json` and `metrics/comparison_report.csv`).
 - **Decisions made:**
   - UI dashboard updates removed.
+### 2026-10-15 — Session 12 (Phase 10: CRT Shader Integration & Customizable Telemetry Studio)
+- **Phase:** Phase 10 — Dashboard UI & ThreeUI CRT Shader Integration
+- **Done:**
+  - Fetched registered ThreeUI CRT source bundle (`https://threeui.com/source-code/crt.json`) and verified exact SHA-256 checksums across all 5 registered files:
+    - `src/shaders/crt/CrtBackground.tsx` (SHA: `20932f26...`)
+    - `src/shaders/crt/crtRenderer.ts` (SHA: `a3eb536e...`)
+    - `src/shaders/crt/crtShaders.ts` (SHA: `cf3a7c74...`)
+    - `src/shaders/crt/crtScreens.ts` (SHA: `e545922e...`)
+    - `src/shaders/threeui.css` (SHA: `efe44471...`)
+  - Configured `@designcodeio/threeui` and `@designcodeio/threeui/style.css` path aliases in `vite.config.ts` and `tsconfig.app.json`.
+  - Created `src/Scene.tsx` implementing exact configured usage with `<CrtBackground />`.
+  - Enhanced `crtRenderer.ts` to support both the Zion Matrix 19-row boot log (per reference image) and the customized Adaptive Serverless Pre-Warming Engine boot log.
+  - Built `src/components/CrtTerminalStudio.tsx` with a retro CRT monitor chassis, tactile dials/sliders for speed, typeSpeed, motion, hue, brightness, saturation, opacity, and live rebooting.
+  - Built `src/components/CustomTelemetryStudio.tsx` offering tactile buttons, 10 customizable observation points, comparator series toggles (None, Naive, Predictive), and multi-format graph projections (Bar group, Latency percentile curves, 5-axis Tradeoff radar).
+  - Added an ambient CRT HUD toggle in `Header.tsx` allowing background green phosphor glow.
+  - Verified `tsc -b && vite build` passes with zero errors (453ms).
+  - Verified live in browser: rendered CRT canvas, character typing, mode toggling, tactile observation switches, and multi-chart projections.
+- **Decisions made:**
+  - Configured dual log mode in `crtRenderer.ts` so users can switch between the Zion Matrix boot sequence and our project's custom pre-warming sequence.
+  - Structured dashboard inside `Serverless Pre-Warming Engine for Cloud/dashboard` per `Architecture.md`.
+- **Blockers/issues:**
+  - None.
 - **Next session should:**
-  - Re-evaluate Phase 10 UI options or proceed directly to Phase 11 deployment.
+  - Proceed with Phase 11 (Deploy to Cloudflare Free Tier / Pages) or Phase 12 (Final Polish & Presentation Prep).
 
 ---
 
@@ -185,6 +207,7 @@
 - Phase 7: Exported ONNX model & edge tree payload (`model_trees.json`). Built Predictor Worker with sub-millisecond edge inference, verified via automated test suite.
 - Phase 8: Built Dispatcher Worker (port 8789) connecting Predictor output to Target warm-up dispatch. Created `run_predictive.py` for predictive mode traffic runs. Verified 0% cold starts & 9.3% wasted warm-up rate (vs 31.82% for Naive).
 - Phase 9: Enhanced Metrics Engine (`metrics/compute_metrics.py`) to generate side-by-side comparative analysis reports (`metrics/comparison_report.json` and `metrics/comparison_report.csv`) covering cold start rates, latency percentiles, wasted warm-ups, and Net Invocation Efficiency.
+- Phase 10: Integrated ThreeUI `<CrtBackground />` with WebGL + 2D Canvas dual-pass rendering, terminal variant, customizable observation graphs, tactile switchboard, and ambient CRT HUD.
 
 ## Known Issues / Tech Debt (running list)
 - (none yet)
