@@ -12,7 +12,7 @@ import { CustomTelemetryStudio } from './components/CustomTelemetryStudio';
 import { InteractiveTerminalLanding, type TerminalMirrorHandle } from './components/InteractiveTerminalLanding';
 import { PreWarmingSimulator } from './utils/simulationEngine';
 import { VERIFIED_BENCHMARK_REPORT } from './data/benchmarkData';
-import type { WarmingMode, TrafficPreset, TelemetryLog, IsolateState } from './types';
+import type { WarmingMode, TrafficPreset, TelemetryLog, IsolateState, MultiModeSimulationResult } from './types';
 import { Maximize2, Monitor, X } from 'lucide-react';
 import './App.css';
 
@@ -42,18 +42,29 @@ export function App() {
   const terminalMirrorRef = useRef<TerminalMirrorHandle | null>(null);
   const streamIntervalRef = useRef<number | null>(null);
 
-  const [logs, setLogs] = useState<TelemetryLog[]>([]);
-  const [isolates, setIsolates] = useState<IsolateState[]>([]);
-  const [comparisonData, setComparisonData] = useState(
-    simulatorRef.current.runComparisonAcrossAllModes('diurnal', 30)
+  const [multiModeResult, setMultiModeResult] = useState<MultiModeSimulationResult>(() =>
+    PreWarmingSimulator.runFullMultiModeSimulation('diurnal', 30)
   );
+
+  const [logs, setLogs] = useState<TelemetryLog[]>(() => multiModeResult.modes.adaptive.logs);
+  const [isolates, setIsolates] = useState<IsolateState[]>(() => multiModeResult.modes.adaptive.isolates);
+  const [comparisonData, setComparisonData] = useState(() => ({
+    none: multiModeResult.modes.none.metrics,
+    naive: multiModeResult.modes.naive.metrics,
+    adaptive: multiModeResult.modes.adaptive.metrics
+  }));
 
   // Switch strategy mode
   const handleSelectMode = (mode: WarmingMode) => {
     setCurrentMode(mode);
     simulatorRef.current.setMode(mode);
-    setLogs([...simulatorRef.current.getLogs()]);
-    setIsolates([...simulatorRef.current.getIsolates()]);
+    if (multiModeResult?.modes[mode]) {
+      setLogs([...multiModeResult.modes[mode].logs]);
+      setIsolates([...multiModeResult.modes[mode].isolates]);
+    } else {
+      setLogs([...simulatorRef.current.getLogs()]);
+      setIsolates([...simulatorRef.current.getIsolates()]);
+    }
     terminalMirrorRef.current?.logCustomEvent(
       'MODE-CHANGE',
       `Strategy set to "${mode.toUpperCase()}". ${
@@ -81,10 +92,28 @@ export function App() {
 
   const handleRunBatch = () => {
     setIsSimulating(true);
-    simulatorRef.current.runBatchSimulation(preset, requestCount);
+    const newLogs = simulatorRef.current.runBatchSimulation(preset, requestCount);
     const metrics = simulatorRef.current.computeMetrics();
-    setLogs([...simulatorRef.current.getLogs()]);
-    setIsolates([...simulatorRef.current.getIsolates()]);
+    const newIsolates = simulatorRef.current.getIsolates();
+    setLogs([...newLogs]);
+    setIsolates([...newIsolates]);
+
+    setMultiModeResult((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        modes: {
+          ...prev.modes,
+          [currentMode]: {
+            mode: currentMode,
+            metrics,
+            logs: newLogs,
+            isolates: newIsolates
+          }
+        }
+      };
+    });
+
     setIsSimulating(false);
     setIsRealDataMode(false);
     terminalMirrorRef.current?.logExternalBatchSummary(
@@ -95,18 +124,40 @@ export function App() {
     );
   };
 
-  const handleRunComparison = () => {
+  const handleRunMultiModeSimulation = (customPreset?: TrafficPreset, customCount?: number) => {
+    const targetPreset = customPreset || preset;
+    const targetCount = customCount || requestCount;
     setIsSimulating(true);
-    const comp = simulatorRef.current.runComparisonAcrossAllModes(preset, requestCount);
+
+    const multi = PreWarmingSimulator.runFullMultiModeSimulation(targetPreset, targetCount);
+    setMultiModeResult(multi);
+
+    const comp = {
+      none: multi.modes.none.metrics,
+      naive: multi.modes.naive.metrics,
+      adaptive: multi.modes.adaptive.metrics
+    };
     setComparisonData(comp);
-    setRightPanel('benchmark');
+
+    const activeOutput = multi.modes[currentMode];
+    if (activeOutput) {
+      setLogs([...activeOutput.logs]);
+      setIsolates([...activeOutput.isolates]);
+    }
+
     setIsRealDataMode(false);
     setIsSimulating(false);
+
     terminalMirrorRef.current?.logCustomEvent(
-      'BENCHMARK-RUN',
-      `Generated comparison across None, Naive, and Predictive modes (${requestCount} reqs, ${preset})`,
+      'MULTI-SIM',
+      `Simulated all 3 modes (${targetCount} reqs, ${targetPreset}): None (${multi.modes.none.metrics.coldStartRatePercent}% cold) vs Naive (${multi.modes.naive.metrics.wastedWarmupCount} wasted) vs ProphetX (${multi.modes.adaptive.metrics.coldStartsAvoided} avoided, ${multi.modes.adaptive.metrics.p95LatencyMs}ms P95).`,
       'h'
     );
+  };
+
+  const handleRunComparison = () => {
+    handleRunMultiModeSimulation();
+    setRightPanel('benchmark');
   };
 
   const handleReset = () => {
@@ -325,6 +376,8 @@ export function App() {
               onRunSingle={handleRunSingle}
               onRunBatch={handleRunBatch}
               onRunComparison={handleRunComparison}
+              onRunMultiModeSimulation={handleRunMultiModeSimulation}
+              onSelectMode={handleSelectMode}
               onReset={handleReset}
               isSimulating={isSimulating}
               currentMode={currentMode}
@@ -336,6 +389,12 @@ export function App() {
             <SimulationVisualizer
               logs={logs}
               isolates={isolates}
+              currentMode={currentMode}
+              onSelectMode={handleSelectMode}
+              preset={preset}
+              requestCount={requestCount}
+              multiModeResult={multiModeResult}
+              onRunMultiModeSimulation={handleRunMultiModeSimulation}
             />
           </>
         );

@@ -4,7 +4,7 @@ import { PreWarmingSimulator } from '../utils/simulationEngine';
 import { VERIFIED_BENCHMARK_REPORT } from '../data/benchmarkData';
 import type { Segment } from '../shaders/crt/crtRenderer';
 import { segment } from '../shaders/crt/crtRenderer';
-import type { WarmingMode, TrafficPreset, TelemetryLog, IsolateState } from '../types';
+import type { TrafficPreset, TelemetryLog, IsolateState } from '../types';
 
 // ── Boot Sequence ──────────────────────────────────────────────
 const BOOT_LOG: Segment[][] = [

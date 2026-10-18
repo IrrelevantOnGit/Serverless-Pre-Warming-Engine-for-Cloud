@@ -31,6 +31,8 @@ interface TrafficControlsProps {
   onToggleLiveStream?: () => void;
   onInjectSpike?: () => void;
   onForceEviction?: () => void;
+  onSelectMode?: (mode: WarmingMode) => void;
+  onRunMultiModeSimulation?: () => void;
 }
 
 export const TrafficControls: React.FC<TrafficControlsProps> = ({
@@ -47,7 +49,9 @@ export const TrafficControls: React.FC<TrafficControlsProps> = ({
   isLiveStreaming = false,
   onToggleLiveStream,
   onInjectSpike,
-  onForceEviction
+  onForceEviction,
+  onSelectMode,
+  onRunMultiModeSimulation
 }) => {
   const [feedbackNotice, setFeedbackNotice] = useState<string | null>(null);
 
@@ -60,19 +64,19 @@ export const TrafficControls: React.FC<TrafficControlsProps> = ({
     {
       id: 'diurnal',
       name: 'Diurnal Seasonality',
-      desc: '24-hour sinusoidal load curve peaking at 14:00 UTC.',
+      desc: '24-hour sinusoidal load curve with 4.4s off-peak lull intervals.',
       icon: Sun
     },
     {
       id: 'spike',
       name: 'Transient Spike Cluster',
-      desc: 'Sudden 10× traffic surge to evaluate edge detector responsiveness.',
+      desc: 'Sudden 10× traffic surge (40ms gap) evaluating ONNX edge detector.',
       icon: Zap
     },
     {
       id: 'bursts',
       name: 'Intermittent Bursts',
-      desc: 'Clustered Poisson-like request bursts with variable gaps.',
+      desc: 'Clustered request bursts with variable 4.5s idle gaps.',
       icon: Activity
     },
     {
@@ -85,14 +89,19 @@ export const TrafficControls: React.FC<TrafficControlsProps> = ({
 
   const handlePresetClick = (pId: TrafficPreset) => {
     onSelectPreset(pId);
-    showNotice(`Profile switched to "${pId}". Click "Inject Batch" or "Run Profile" to simulate.`);
+    showNotice(`Profile switched to "${pId}". Click "Run 3-Mode Simulation" or "Inject Batch" to execute.`);
   };
 
   const handleSimulateProfileNow = (e: React.MouseEvent, pId: TrafficPreset) => {
     e.stopPropagation();
     onSelectPreset(pId);
-    onRunBatch();
-    showNotice(`Dispatched synthetic batch for "${pId}" workload.`);
+    if (onRunMultiModeSimulation) {
+      onRunMultiModeSimulation();
+      showNotice(`Dispatched 3-mode comparative simulation for "${pId}" workload (${requestCount} reqs).`);
+    } else {
+      onRunBatch();
+      showNotice(`Dispatched synthetic batch for "${pId}" workload.`);
+    }
   };
 
   const handleSpikeClick = () => {
@@ -113,7 +122,7 @@ export const TrafficControls: React.FC<TrafficControlsProps> = ({
     <div className="surface-card p-4 space-y-4 mb-4">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#232c3d]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#232c3d]">
         <div>
           <div className="flex items-center space-x-2">
             <Sliders className="w-4 h-4 text-teal-400" />
@@ -122,11 +131,49 @@ export const TrafficControls: React.FC<TrafficControlsProps> = ({
             </h3>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Inject controlled invocation patterns into the in-browser isolate simulator.
+            Inject controlled invocation patterns to benchmark None, Naive, and ProphetX.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {/* Target mode switcher */}
+          <div className="flex items-center bg-[#0a0d14] p-0.5 rounded-sm border border-[#232c3d]">
+            <span className="text-[10px] font-mono text-slate-500 px-2">Mode:</span>
+            <button
+              type="button"
+              onClick={() => onSelectMode?.('none')}
+              className={`px-2 py-0.5 rounded-sm text-[11px] font-mono transition-colors ${
+                currentMode === 'none'
+                  ? 'bg-rose-950 text-rose-300 font-bold border border-rose-800'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              None
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectMode?.('naive')}
+              className={`px-2 py-0.5 rounded-sm text-[11px] font-mono transition-colors ${
+                currentMode === 'naive'
+                  ? 'bg-amber-950 text-amber-300 font-bold border border-amber-800'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Naive
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectMode?.('adaptive')}
+              className={`px-2 py-0.5 rounded-sm text-[11px] font-mono transition-colors ${
+                currentMode === 'adaptive'
+                  ? 'bg-emerald-950 text-emerald-300 font-bold border border-emerald-800'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              ProphetX
+            </button>
+          </div>
+
           {isLiveStreaming ? (
             <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-sm text-[11px] font-mono bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 animate-pulse">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
@@ -137,9 +184,6 @@ export const TrafficControls: React.FC<TrafficControlsProps> = ({
               Sandbox Idle
             </span>
           )}
-          <span className="px-2 py-0.5 rounded-sm text-[11px] font-mono bg-[#10151f] text-slate-300 border border-[#232c3d]">
-            Mode: <strong className="capitalize text-slate-100">{currentMode}</strong>
-          </span>
         </div>
       </div>
 
@@ -268,11 +312,26 @@ export const TrafficControls: React.FC<TrafficControlsProps> = ({
       {/* Slider & Standard Actions Bar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-center pt-2 border-t border-[#232c3d]">
         
-        {/* Slider */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs">
-            <span className="text-slate-400">Batch Invocations</span>
-            <span className="font-mono text-slate-200 font-medium">{requestCount} reqs</span>
+        {/* Slider & Quick Presets */}
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-slate-400 font-medium">Workload Invocations</span>
+            <div className="flex items-center space-x-1">
+              {[15, 30, 44, 60, 100].map((cnt) => (
+                <button
+                  key={cnt}
+                  type="button"
+                  onClick={() => onChangeRequestCount(cnt)}
+                  className={`px-1.5 py-0.2 rounded text-[10px] font-mono transition-colors ${
+                    requestCount === cnt
+                      ? 'bg-teal-950 text-teal-300 border border-teal-700/80 font-bold'
+                      : 'bg-[#10151f] text-slate-500 hover:text-slate-300 border border-[#232c3d]'
+                  }`}
+                >
+                  {cnt}
+                </button>
+              ))}
+            </div>
           </div>
           <input
             type="range"
@@ -288,30 +347,30 @@ export const TrafficControls: React.FC<TrafficControlsProps> = ({
         {/* Buttons Action Bar */}
         <div className="lg:col-span-2 flex flex-wrap items-center gap-2">
           <button
+            onClick={onRunMultiModeSimulation || onRunComparison}
+            disabled={isSimulating}
+            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-sm bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold shadow-sm shadow-teal-950 transition-all border border-teal-400/40"
+          >
+            <BarChart2 className="w-3.5 h-3.5 text-teal-200" />
+            <span>Simulate All 3 Modes ({requestCount} reqs)</span>
+          </button>
+
+          <button
+            onClick={onRunBatch}
+            disabled={isSimulating}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-sm bg-[#18202d] hover:bg-[#20293a] text-slate-200 border border-[#2e384d] text-xs font-medium transition-colors"
+          >
+            <FastForward className="w-3.5 h-3.5 text-slate-400" />
+            <span>Run Current Mode ({currentMode})</span>
+          </button>
+
+          <button
             onClick={onRunSingle}
             disabled={isSimulating}
             className="flex items-center space-x-1.5 px-3 py-1.5 rounded-sm bg-[#18202d] hover:bg-[#20293a] text-slate-200 border border-[#2e384d] text-xs font-medium transition-colors"
           >
             <Play className="w-3.5 h-3.5 text-slate-400" />
             <span>Single Step</span>
-          </button>
-
-          <button
-            onClick={onRunBatch}
-            disabled={isSimulating}
-            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-sm bg-teal-700 hover:bg-teal-600 text-white text-xs font-medium transition-colors"
-          >
-            <FastForward className="w-3.5 h-3.5" />
-            <span>Inject Batch ({requestCount})</span>
-          </button>
-
-          <button
-            onClick={onRunComparison}
-            disabled={isSimulating}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-sm bg-[#18202d] hover:bg-[#20293a] text-slate-200 border border-[#2e384d] text-xs font-medium transition-colors"
-          >
-            <BarChart2 className="w-3.5 h-3.5 text-slate-400" />
-            <span>Run Multi-Mode Comparison</span>
           </button>
 
           <button

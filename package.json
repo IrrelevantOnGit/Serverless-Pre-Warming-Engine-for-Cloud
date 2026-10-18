@@ -6,7 +6,8 @@
   "scripts": {
     "dev:target": "wrangler dev worker/target/index.ts --port 8787",
     "dev:predictor": "wrangler dev worker/predictor/index.ts --port 8788",
-    "dev:dispatcher": "wrangler dev worker/dispatcher/index.ts --port 8789"
+    "dev:dispatcher": "wrangler dev worker/dispatcher/index.ts --port 8789",
+    "dev:dashboard": "npm run dev --prefix dashboard"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240815.0",

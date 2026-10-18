@@ -4,7 +4,7 @@ This repository implements a predictive pre-warming engine for serverless edge f
 
 ---
 
-## Current Status (Phases Completed: 0 through 9)
+## Current Status (Phases Completed: 0 through 10)
 
 - **Phase 0:** Project Scaffolding & Wrangler Configured
 - **Phase 1:** Target Worker with V8 Isolate Cold vs. Warm Detection & Timing Instrumentation
@@ -16,6 +16,7 @@ This repository implements a predictive pre-warming engine for serverless edge f
 - **Phase 7:** Export to ONNX & Edge Inference Worker Built (Sub-millisecond Edge Inference & 100% Parity Verified)
 - **Phase 8:** Warm-up Dispatcher Worker Built & Predictive Pipeline Verified (0% Cold Starts, 9.3% Wasted Warm-ups)
 - **Phase 9:** Metrics Engine & Side-by-Side Comparison Generator Built (`comparison_report.json` and `comparison_report.csv`)
+- **Phase 10:** Interactive Telemetry Dashboard & ThreeUI CRT Shader Studio Built (ProphetX Studio with 3-mode comparative simulation engine, real-time V8 isolate fleet tracking, and edge ONNX inspector)
 
 ---
 
@@ -512,6 +513,37 @@ Net Invocation Efficiency Ratio     | 0.0x       | 0.33x      | 1.0x
 
 ---
 
+### Step 10: Launch the ProphetX Interactive Dashboard & Telemetry Studio
+
+Launch the React / Vite dashboard locally:
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+Open your browser to: **`http://localhost:5173`**
+
+#### Key Dashboard Capabilities:
+1. **ThreeUI Dual-Pass CRT Shader Canvas**:
+   - WebGL phosphor scanline shader with Zion Matrix and Engine boot logs.
+   - Interactive retro monitor chassis with tactile dials for speed, motion, glow, hue, and live rebooting.
+2. **Deterministic 3-Mode Simulation Engine**:
+   - One-click simultaneous benchmark comparing **None**, **Naive**, and **ProphetX** against identical arrival schedules.
+   - Presets for Diurnal Seasonality, 10x Transient Spike Clusters, Poisson Bursts, and Extended Idle Evictions (>3.5s).
+3. **Descriptive Empirical & Simulation Graphs**:
+   - **Comparative Latency Trajectory**: 3 synchronized lines showing Baseline cold spikes up to 75ms vs Naive ping overhead vs ProphetX's sub-3ms execution.
+   - **Cold Starts vs Warm Hits Breakdown**: Stacked bar chart proving cold-start elimination.
+   - **Synthetic Ping Utility**: Grouped bar showing Naive wasting ~80% of pings vs ProphetX's 1.0x efficiency.
+   - **Tail Latency SLA Guarantees**: Side-by-side P50, P95, and P99 percentiles.
+   - **Strategy Deep-Dives**: Live V8 Isolate Fleet Tracker with individual status badges (`WARM`, `COLD_START`, `EVICTED`) and filterable raw event stream.
+4. **Empirical Benchmark Comparison Matrix**:
+   - Verified Phase 9 empirical data with independently scaled metric cards for Cold Start Rate, Avoided Boots, Latency SLA, and Wasted Warmup Rate.
+5. **Edge ONNX Inspector**:
+   - Interactive feature vector tuner allowing custom hour, rolling count, idle gap, and spike derivative injections to observe sub-millisecond edge classification.
+
+---
+
 ## Folder Structure
 
 ```
@@ -521,6 +553,21 @@ Serverless Pre-Warming Engine for Cloud/
 ├── wrangler.toml             # Cloudflare Workers configuration
 ├── package.json              # Node dependencies (wrangler, typescript)
 ├── tsconfig.json             # TypeScript compiler settings
+├── dashboard/                # Phase 10: Interactive Telemetry Studio & CRT Shader
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── InteractiveTerminalLanding.tsx  # CRT Chassis & Boot Sequence
+│   │   │   ├── SimulationVisualizer.tsx        # Descriptive 3-Mode Comparative Graphs
+│   │   │   ├── TrafficControls.tsx             # Workload Presets & Multi-Mode Triggers
+│   │   │   ├── MetricsComparison.tsx           # Independently Scaled Benchmark Cards
+│   │   │   ├── CustomTelemetryStudio.tsx       # Multi-Format Graph & Radar Projections
+│   │   │   ├── OnnxInspector.tsx               # Interactive ML Feature Vector Tuner
+│   │   │   └── ServerlessFunctionStatus.tsx    # V8 Worker Fleet Probe & Diagnostics
+│   │   ├── shaders/crt/                        # ThreeUI WebGL Dual-Pass CRT Shader
+│   │   ├── utils/simulationEngine.ts           # Deterministic 3-Mode Simulator Engine
+│   │   └── data/benchmarkData.ts               # Verified Phase 9 Benchmark Telemetry
+│   ├── vite.config.ts        # Vite configuration & path aliases
+│   └── package.json          # Dashboard dependencies (React 19, Chart.js, Lucide)
 ├── worker/
 │   ├── target/
 │   │   └── index.ts          # Target Worker (telemetry + idle cold detection)

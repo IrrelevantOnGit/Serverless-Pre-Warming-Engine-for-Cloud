@@ -82,3 +82,18 @@ export interface RealExperimentalReport {
     net_invocation_efficiency_naive: number;
   };
 }
+
+export interface SingleModeSimOutput {
+  mode: WarmingMode;
+  metrics: ModeMetrics;
+  logs: TelemetryLog[];
+  isolates: IsolateState[];
+}
+
+export interface MultiModeSimulationResult {
+  timestamp: string;
+  preset: TrafficPreset;
+  requestCount: number;
+  modes: Record<WarmingMode, SingleModeSimOutput>;
+}
+
