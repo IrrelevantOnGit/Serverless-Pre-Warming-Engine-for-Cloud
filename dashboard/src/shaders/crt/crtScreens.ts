@@ -34,9 +34,9 @@ export type CrtStyle = {
 
 export const CRT_STYLES: Record<CrtVariant, CrtStyle> = {
   terminal: {
-    curve: [0.115, 0.165], scanDensity: 0.44, scanDepth: 0.30, triadCss: 3.2, grille: 0.34, chroma: 1,
-    bar: 0.045, flicker: 0.028, grain: 0.022, noise: 0, vignette: 0.58, mono: 0, gain: 1.34, halo: 0.10,
-    sheen: [0.55, 1.0, 0.78], room: [0.012, 0.03, 0.022], background: "#03100a",
+    curve: [0.022, 0.032], scanDensity: 0.38, scanDepth: 0.12, triadCss: 3.2, grille: 0.10, chroma: 0.08,
+    bar: 0.025, flicker: 0.008, grain: 0.006, noise: 0, vignette: 0.24, mono: 0, gain: 1.28, halo: 0.015,
+    sheen: [0.15, 0.35, 0.22], room: [0.010, 0.025, 0.018], background: "#020a06",
     filtering: "linear", surface: { mode: "buffer" }, redrawMs: 0,
   },
   cinematic: {

@@ -37,7 +37,7 @@ export interface ModeMetrics {
 
 export interface IsolateState {
   id: string;
-  status: 'cold_init' | 'warm' | 'busy' | 'cooling' | 'terminated' | 'WARM' | 'COLD_START';
+  status: 'cold_init' | 'warm' | 'busy' | 'cooling' | 'terminated' | 'WARM' | 'COLD_START' | 'evicted';
   lastActiveTime: number;
   totalInvocations: number;
   createdTime: number;

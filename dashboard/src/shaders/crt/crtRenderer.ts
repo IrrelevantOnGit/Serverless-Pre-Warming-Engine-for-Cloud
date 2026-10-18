@@ -40,7 +40,12 @@ export const PREWARMING_LOG: Segment[][] = [
   [segment("SYSTEM COLD-START  "), segment("eliminated.", "h")], [segment("subject Cloudflare Isolate   status pre-warmed ", "d"), segment("!", "a"), segment("!", "a")], [], [segment("engine ready: type 'help' or enter commands below")],
 ];
 
-const COLORS = { p: { fill: "#8df0b4", glow: "rgba(28,236,132,0.95)" }, d: { fill: "#4f9a76", glow: "rgba(28,236,132,0.45)" }, a: { fill: "#ffba5e", glow: "rgba(255,150,52,0.95)" }, h: { fill: "#eafff3", glow: "rgba(120,255,190,0.95)" } };
+const COLORS = {
+  p: { fill: "#9ef7c2", glow: "rgba(28,236,132,0.75)" },
+  d: { fill: "#60be8e", glow: "rgba(28,236,132,0.30)" },
+  a: { fill: "#ffd078", glow: "rgba(255,160,60,0.75)" },
+  h: { fill: "#f4fff8", glow: "rgba(160,255,210,0.85)" },
+};
 const lineLength = (line: Segment[]) => line.reduce((total, item) => total + item.t.length, 0);
 /* backing-store ceiling: the composite is one triangle, so the cost that matters is
    the 2D screen redraw and its upload, not the fragment pass */
@@ -68,13 +73,13 @@ export function createCrtRenderer(host: HTMLElement, canvas: HTMLCanvasElement, 
     TOTAL = effectiveLines.reduce((total, line) => total + lineLength(line), 0);
     MAX_CHARS = Math.max(38, ...effectiveLines.map(lineLength));
     const count = Math.max(14, effectiveLines.length + (opts.commandPrompt ? 1 : 0));
-    startY = height * 0.07;
-    lineHeight = Math.max(13, (height * 0.86) / Math.min(count, 22));
-    fontSize = Math.max(8, Math.min(lineHeight * 0.76, (width * 0.90) / (MAX_CHARS * 0.62)));
+    startY = height * 0.055;
+    lineHeight = Math.max(15, (height * 0.88) / Math.min(count, 22));
+    fontSize = Math.max(10, Math.min(lineHeight * 0.78, (width * 0.94) / (MAX_CHARS * 0.58)));
     textContext.font = `600 ${fontSize.toFixed(2)}px ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace`;
     charWidth = textContext.measureText("M").width || fontSize * 0.6;
   };
-  const setStyle = (key: Segment["c"], glow: boolean) => { const color = COLORS[key]; textContext.fillStyle = color.fill; textContext.shadowColor = glow ? color.glow : "transparent"; textContext.shadowBlur = glow ? fontSize * 0.38 : 0; };
+  const setStyle = (key: Segment["c"], glow: boolean) => { const color = COLORS[key]; textContext.fillStyle = color.fill; textContext.shadowColor = glow ? color.glow : "transparent"; textContext.shadowBlur = glow ? fontSize * 0.16 : 0; };
   /* two passes per glyph: a soft phosphor halo, then the same glyph re-filled with
      the shadow off so the stroke core stays crisp at any backing resolution */
   const drawScreen = (reveal: number) => {

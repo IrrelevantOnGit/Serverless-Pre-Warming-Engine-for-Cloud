@@ -35,9 +35,13 @@ export function App() {
   const [requestCount, setRequestCount] = useState<number>(30);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [isRealDataMode, setIsRealDataMode] = useState<boolean>(true);
+  const [isLiveStreaming, setIsLiveStreaming] = useState<boolean>(false);
+  const [activeSnippetIndex, setActiveSnippetIndex] = useState<number>(0);
 
   const simulatorRef = useRef<PreWarmingSimulator>(new PreWarmingSimulator('adaptive'));
   const terminalMirrorRef = useRef<TerminalMirrorHandle | null>(null);
+  const streamIntervalRef = useRef<number | null>(null);
+
   const [logs, setLogs] = useState<TelemetryLog[]>([]);
   const [isolates, setIsolates] = useState<IsolateState[]>([]);
   const [comparisonData, setComparisonData] = useState(
@@ -50,6 +54,17 @@ export function App() {
     simulatorRef.current.setMode(mode);
     setLogs([...simulatorRef.current.getLogs()]);
     setIsolates([...simulatorRef.current.getIsolates()]);
+    terminalMirrorRef.current?.logCustomEvent(
+      'MODE-CHANGE',
+      `Strategy set to "${mode.toUpperCase()}". ${
+        mode === 'adaptive'
+          ? 'ML-guided ONNX predictor enabled.'
+          : mode === 'naive'
+          ? 'Fixed 2.0s periodic cron warmer enabled.'
+          : 'Zero synthetic pre-warming baseline.'
+      }`,
+      'h'
+    );
   };
 
   const handleToggleDataSource = (real: boolean) => {
@@ -87,13 +102,136 @@ export function App() {
     setRightPanel('benchmark');
     setIsRealDataMode(false);
     setIsSimulating(false);
+    terminalMirrorRef.current?.logCustomEvent(
+      'BENCHMARK-RUN',
+      `Generated comparison across None, Naive, and Predictive modes (${requestCount} reqs, ${preset})`,
+      'h'
+    );
   };
 
   const handleReset = () => {
+    if (streamIntervalRef.current) {
+      clearInterval(streamIntervalRef.current);
+      streamIntervalRef.current = null;
+      setIsLiveStreaming(false);
+    }
     simulatorRef.current.reset(currentMode);
     setLogs([]);
     setIsolates([]);
+    terminalMirrorRef.current?.logCustomEvent(
+      'RESET',
+      'Simulator telemetry and isolate memory cleared.',
+      'a'
+    );
   };
+
+  // Continuous live traffic stream
+  const handleToggleLiveStream = () => {
+    if (isLiveStreaming) {
+      if (streamIntervalRef.current) {
+        clearInterval(streamIntervalRef.current);
+        streamIntervalRef.current = null;
+      }
+      setIsLiveStreaming(false);
+      terminalMirrorRef.current?.logCustomEvent(
+        'STREAM-STOP',
+        'Continuous traffic generation paused.',
+        'd'
+      );
+    } else {
+      setIsLiveStreaming(true);
+      setIsRealDataMode(false);
+      terminalMirrorRef.current?.logCustomEvent(
+        'STREAM-START',
+        'Continuous traffic generation active (1 req / 800ms)',
+        'p'
+      );
+      streamIntervalRef.current = window.setInterval(() => {
+        const log = simulatorRef.current.simulateRequest(false, false);
+        setLogs([...simulatorRef.current.getLogs()]);
+        setIsolates([...simulatorRef.current.getIsolates()]);
+        terminalMirrorRef.current?.logExternalRequest(log);
+      }, 800);
+    }
+  };
+
+  // 10x Spike surge action
+  const handleInjectSpike = () => {
+    setIsRealDataMode(false);
+    const newLogs = simulatorRef.current.simulateSpikeCluster(12);
+    setLogs([...simulatorRef.current.getLogs()]);
+    setIsolates([...simulatorRef.current.getIsolates()]);
+    terminalMirrorRef.current?.logCustomEvent(
+      'SPIKE-SURGE',
+      `Injected 10x traffic spike cluster (12 reqs). Last latency: ${newLogs[newLogs.length - 1]?.latencyMs}ms`,
+      'a'
+    );
+  };
+
+  // Force Eviction (>3.5s Idle) action
+  const handleForceEviction = () => {
+    const { evictedCount } = simulatorRef.current.forceEviction(4500);
+    setIsolates([...simulatorRef.current.getIsolates()]);
+    terminalMirrorRef.current?.logCustomEvent(
+      'EVICTION',
+      `Simulated 4,500ms idle delay. ${evictedCount} V8 isolates evicted. Next request will be COLD BOOT.`,
+      'a'
+    );
+  };
+
+  // Pre-warm fleet action
+  const handlePreWarmFleet = () => {
+    const { warmedId } = simulatorRef.current.preWarmFleet();
+    setLogs([...simulatorRef.current.getLogs()]);
+    setIsolates([...simulatorRef.current.getIsolates()]);
+    terminalMirrorRef.current?.logCustomEvent(
+      'FLEET-WARM',
+      `Pre-warm ping dispatched to edge fleet. Active isolate: ${warmedId} (WARM)`,
+      'p'
+    );
+  };
+
+  // Custom vector injection from ONNX Inspector
+  const handleInjectVector = (vector: {
+    hourOfDay: number;
+    rolling1m: number;
+    rolling5m: number;
+    idleGapSec: number;
+    trafficDerivative: number;
+    isBurst: boolean;
+    score: number;
+    triggerWarming: boolean;
+  }) => {
+    setIsRealDataMode(false);
+    const log = simulatorRef.current.simulateCustomInference(
+      vector.hourOfDay,
+      vector.rolling1m,
+      vector.rolling5m,
+      vector.idleGapSec,
+      vector.trafficDerivative,
+      vector.isBurst,
+      vector.score,
+      vector.triggerWarming
+    );
+    setLogs([...simulatorRef.current.getLogs()]);
+    setIsolates([...simulatorRef.current.getIsolates()]);
+    terminalMirrorRef.current?.logCustomEvent(
+      'ONNX-VECTOR',
+      `Vector evaluated: P(spike)=${(vector.score * 100).toFixed(1)}% → ${
+        vector.triggerWarming ? 'DISPATCH PRE-WARM' : 'IDLE / NO PING'
+      } • ${log.isCold ? 'COLD BOOT' : 'WARM HIT'} (${log.latencyMs}ms)`,
+      vector.triggerWarming ? 'p' : 'd'
+    );
+  };
+
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      if (streamIntervalRef.current) {
+        clearInterval(streamIntervalRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     simulatorRef.current.runBatchSimulation('diurnal', 20);
@@ -109,10 +247,17 @@ export function App() {
         : VERIFIED_BENCHMARK_REPORT.modes.predictive)
     : simulatorRef.current.computeMetrics();
 
-  // Terminal navigates → open right panel
+  // Navigation handlers
   const handleTerminalNavigate = useCallback((tab: string) => {
     setRightPanel(tab);
     setPanelFullscreen(false);
+  }, []);
+
+  const handleNavigateTab = useCallback((tab: string, snippetIndex?: number) => {
+    if (snippetIndex !== undefined) {
+      setActiveSnippetIndex(snippetIndex);
+    }
+    setRightPanel(tab);
   }, []);
 
   const handleClosePanel = useCallback(() => {
@@ -183,6 +328,10 @@ export function App() {
               onReset={handleReset}
               isSimulating={isSimulating}
               currentMode={currentMode}
+              isLiveStreaming={isLiveStreaming}
+              onToggleLiveStream={handleToggleLiveStream}
+              onInjectSpike={handleInjectSpike}
+              onForceEviction={handleForceEviction}
             />
             <SimulationVisualizer
               logs={logs}
@@ -191,21 +340,47 @@ export function App() {
           </>
         );
       case 'onnx':
-        return <OnnxInspector />;
+        return <OnnxInspector onInjectVector={handleInjectVector} />;
       case 'functions':
         return (
           <ServerlessFunctionStatus
             currentMode={currentMode}
             isolates={isolates}
             isLiveConnected={null}
+            onNavigateTab={handleNavigateTab}
+            onPreWarmFleet={handlePreWarmFleet}
+            onEvictFleet={handleForceEviction}
+            onTestWorker={(wName) => {
+              if (wName === 'worker/target') handleRunSingle();
+              else if (wName === 'worker/dispatcher') handlePreWarmFleet();
+              else if (wName === 'worker/naive-warmer') handleRunSingle();
+              else handleInjectSpike();
+            }}
           />
         );
       case 'probe':
-        return <LiveWorkerProbe />;
+        return (
+          <LiveWorkerProbe
+            onProbeResult={(res) => {
+              terminalMirrorRef.current?.logCustomEvent(
+                'PROBE-HTTP',
+                `HTTP ${res.status} on ${res.payload?.service || 'worker'} • ${
+                  res.payload?.telemetry?.cold_boot ? 'COLD BOOT' : 'WARM HIT'
+                } (${res.clientDurationMs}ms)`,
+                res.payload?.telemetry?.cold_boot ? 'a' : 'p'
+              );
+            }}
+          />
+        );
       case 'code':
-        return <CodeExplorer />;
+        return (
+          <CodeExplorer
+            initialSnippetIndex={activeSnippetIndex}
+            onNavigateTab={handleNavigateTab}
+          />
+        );
       case 'roadmap':
-        return <PhaseRoadmap />;
+        return <PhaseRoadmap onNavigateTab={handleNavigateTab} />;
       default:
         return null;
     }

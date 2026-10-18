@@ -34,6 +34,7 @@ const PROMPT = "prophetx:~# ";
 export interface TerminalMirrorHandle {
   logExternalRequest: (log: TelemetryLog) => void;
   logExternalBatchSummary: (count: number, preset: string, coldRate: number, avgLatency: number) => void;
+  logCustomEvent: (tag: string, detail: string, color?: Segment['c']) => void;
 }
 
 interface InteractiveTerminalLandingProps {
@@ -136,6 +137,12 @@ export function InteractiveTerminalLanding({
             segment(`${avgLat}ms`, "h"),
           ],
           [],
+        ]);
+      },
+      logCustomEvent: (tag: string, detail: string, color: Segment["c"] = "h") => {
+        appendLine([
+          segment(`  [${tag}] `, color),
+          segment(detail, "d"),
         ]);
       },
     };

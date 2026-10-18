@@ -71,23 +71,24 @@ export const CustomTelemetryStudio: React.FC<CustomTelemetryStudioProps> = ({
   // All available observation points
   const allMetricDefs: MetricDef[] = [
     { id: 'cold_rate', label: 'Cold Start Rate', category: 'economy', unit: '%', getter: (m) => m?.coldStartRatePercent ?? 0 },
-    { id: 'p95_lat', label: 'P95 Latency', category: 'latency', unit: 'ms', getter: (m) => m?.p95LatencyMs ?? 0 },
-    { id: 'p99_lat', label: 'P99 Tail Latency', category: 'latency', unit: 'ms', getter: (m) => m?.p99LatencyMs ?? 0 },
-    { id: 'p50_lat', label: 'P50 Median Latency', category: 'latency', unit: 'ms', getter: (m) => m?.p50LatencyMs ?? 0 },
-    { id: 'avg_lat', label: 'Average Latency', category: 'latency', unit: 'ms', getter: (m) => m?.avgLatencyMs ?? 0 },
-    { id: 'wasted_rate', label: 'Wasted Warmup Rate', category: 'economy', unit: '%', getter: (m) => m?.wastedWarmupRatePercent ?? 0 },
-    { id: 'net_eff', label: 'Net Efficiency Ratio', category: 'economy', unit: 'x', getter: (m) => m?.netInvocationEfficiencyRatio ?? 0 },
     { id: 'cold_avoided', label: 'Cold Starts Avoided', category: 'volume', unit: '', getter: (m) => m?.coldStartsAvoided ?? 0 },
     { id: 'synth_pings', label: 'Synthetic Pings Issued', category: 'volume', unit: '', getter: (m) => m?.totalSyntheticRequests ?? 0 },
+    { id: 'wasted_pings', label: 'Wasted Redundant Pings', category: 'volume', unit: '', getter: (m) => m?.wastedWarmupCount ?? 0 },
+    { id: 'wasted_rate', label: 'Wasted Warmup Rate', category: 'economy', unit: '%', getter: (m) => m?.wastedWarmupRatePercent ?? 0 },
+    { id: 'net_eff', label: 'Net Efficiency Ratio (×10)', category: 'economy', unit: 'x10', getter: (m) => parseFloat(((m?.netInvocationEfficiencyRatio ?? 0) * 10).toFixed(1)) },
+    { id: 'p95_lat', label: 'P95 Tail Latency', category: 'latency', unit: 'ms', getter: (m) => m?.p95LatencyMs ?? 0 },
+    { id: 'p99_lat', label: 'P99 Peak Latency', category: 'latency', unit: 'ms', getter: (m) => m?.p99LatencyMs ?? 0 },
+    { id: 'p50_lat', label: 'P50 Median Latency', category: 'latency', unit: 'ms', getter: (m) => m?.p50LatencyMs ?? 0 },
+    { id: 'avg_lat', label: 'Average Latency', category: 'latency', unit: 'ms', getter: (m) => m?.avgLatencyMs ?? 0 },
     { id: 'total_real', label: 'Total Real Workload', category: 'volume', unit: '', getter: (m) => m?.totalRealRequests ?? 0 },
   ];
 
-  // Selected observation points (default subset)
+  // Selected observation points (default: balanced contrast showing cold start elimination & low wasted pings)
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>([
     'cold_rate',
-    'p95_lat',
+    'cold_avoided',
     'wasted_rate',
-    'net_eff'
+    'synth_pings'
   ]);
 
   const toggleMetric = (id: string) => {
@@ -564,19 +565,37 @@ export const CustomTelemetryStudio: React.FC<CustomTelemetryStudioProps> = ({
               Custom Observation Points Filter ({selectedMetrics.length} Active)
             </h3>
           </div>
-          <div className="flex items-center space-x-2 text-[11px] font-mono">
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono">
+            <span className="text-slate-500 mr-1 text-[10px]">Presets:</span>
+            <button
+              onClick={() => setSelectedMetrics(['cold_rate', 'cold_avoided', 'wasted_rate', 'synth_pings'])}
+              className="px-2 py-0.5 rounded-sm bg-[#18202d] hover:bg-[#222c3d] text-teal-300 border border-[#2e384d]"
+            >
+              Balanced Core
+            </button>
+            <button
+              onClick={() => setSelectedMetrics(['cold_rate', 'cold_avoided', 'p95_lat', 'p99_lat'])}
+              className="px-2 py-0.5 rounded-sm bg-[#10151f] hover:bg-[#18202d] text-slate-300 border border-[#232c3d]"
+            >
+              Cold Defense
+            </button>
+            <button
+              onClick={() => setSelectedMetrics(['synth_pings', 'wasted_pings', 'wasted_rate', 'cold_avoided'])}
+              className="px-2 py-0.5 rounded-sm bg-[#10151f] hover:bg-[#18202d] text-slate-300 border border-[#232c3d]"
+            >
+              Overhead & Economy
+            </button>
+            <button
+              onClick={() => setSelectedMetrics(['p50_lat', 'avg_lat', 'p95_lat', 'p99_lat'])}
+              className="px-2 py-0.5 rounded-sm bg-[#10151f] hover:bg-[#18202d] text-slate-300 border border-[#232c3d]"
+            >
+              Latency Quantiles
+            </button>
             <button
               onClick={() => setSelectedMetrics(allMetricDefs.map((m) => m.id))}
-              className="text-slate-400 hover:text-teal-300 underline"
+              className="px-2 py-0.5 rounded-sm bg-[#10151f] hover:bg-[#18202d] text-slate-400 border border-[#232c3d]"
             >
-              Select All
-            </button>
-            <span className="text-slate-600">•</span>
-            <button
-              onClick={() => setSelectedMetrics(['cold_rate', 'p95_lat', 'wasted_rate', 'net_eff'])}
-              className="text-slate-400 hover:text-teal-300 underline"
-            >
-              Core 4
+              All
             </button>
           </div>
         </div>

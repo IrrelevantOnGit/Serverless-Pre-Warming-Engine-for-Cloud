@@ -1,24 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { WarmingMode, IsolateState } from '../types';
 import { 
   Server, 
   Flame, 
   Brain, 
   Zap, 
-  Activity 
+  Activity,
+  Play,
+  FileCode,
+  Copy,
+  Check,
+  Snowflake,
+  ShieldCheck
 } from 'lucide-react';
 
 interface ServerlessFunctionStatusProps {
   currentMode: WarmingMode;
   isolates: IsolateState[];
   isLiveConnected: boolean | null;
+  onNavigateTab?: (tab: string, snippetIndex?: number) => void;
+  onPreWarmFleet?: () => void;
+  onEvictFleet?: () => void;
+  onTestWorker?: (workerName: string) => void;
 }
 
 export const ServerlessFunctionStatus: React.FC<ServerlessFunctionStatusProps> = ({
   currentMode,
   isolates,
-  isLiveConnected
+  isLiveConnected,
+  onNavigateTab,
+  onPreWarmFleet,
+  onEvictFleet,
+  onTestWorker
 }) => {
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [workerTestResult, setWorkerTestResult] = useState<{ [key: string]: string }>({});
+  const [fleetNotice, setFleetNotice] = useState<string | null>(null);
+
   const workers = [
     {
       name: 'worker/target',
@@ -31,7 +49,8 @@ export const ServerlessFunctionStatus: React.FC<ServerlessFunctionStatusProps> =
       memory: '128 MB',
       runtime: 'Cloudflare V8 Isolate',
       icon: Server,
-      status: isLiveConnected ? 'Connected (Port 8787)' : 'Standby / Offline'
+      status: isLiveConnected ? 'Connected (Port 8787)' : 'Standby / Offline',
+      snippetIndex: 0
     },
     {
       name: 'worker/predictor',
@@ -44,7 +63,8 @@ export const ServerlessFunctionStatus: React.FC<ServerlessFunctionStatusProps> =
       memory: '64 MB',
       runtime: 'ONNX Web / V8',
       icon: Brain,
-      status: currentMode === 'adaptive' ? 'Active in Pipeline' : 'Disabled (Mode Standby)'
+      status: currentMode === 'adaptive' ? 'Active in Pipeline' : 'Disabled (Mode Standby)',
+      snippetIndex: 1
     },
     {
       name: 'worker/dispatcher',
@@ -57,7 +77,8 @@ export const ServerlessFunctionStatus: React.FC<ServerlessFunctionStatusProps> =
       memory: '64 MB',
       runtime: 'Workers Fetch Handler',
       icon: Zap,
-      status: currentMode === 'adaptive' ? 'Active in Pipeline' : 'Disabled (Mode Standby)'
+      status: currentMode === 'adaptive' ? 'Active in Pipeline' : 'Disabled (Mode Standby)',
+      snippetIndex: 2
     },
     {
       name: 'worker/naive-warmer',
@@ -70,9 +91,61 @@ export const ServerlessFunctionStatus: React.FC<ServerlessFunctionStatusProps> =
       memory: '32 MB',
       runtime: 'Workers Scheduled Event',
       icon: Flame,
-      status: currentMode === 'naive' ? 'Active in Pipeline' : 'Disabled (Mode Standby)'
+      status: currentMode === 'naive' ? 'Active in Pipeline' : 'Disabled (Mode Standby)',
+      snippetIndex: 3
     }
   ];
+
+  const handleCopy = (cmd: string, idx: number) => {
+    navigator.clipboard.writeText(cmd);
+    setCopiedIndex(idx);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const handleRunTest = (workerName: string) => {
+    if (onTestWorker) {
+      onTestWorker(workerName);
+    }
+    const now = new Date().toLocaleTimeString();
+    if (workerName === 'worker/target') {
+      const isWarm = isolates.some((i) => i.status === 'warm' || i.status === 'WARM');
+      setWorkerTestResult(prev => ({
+        ...prev,
+        [workerName]: `[${now}] Invocation: ${isWarm ? 'WARM HIT (2.1ms)' : 'COLD BOOT (68.4ms)'} on :8787`
+      }));
+    } else if (workerName === 'worker/predictor') {
+      setWorkerTestResult(prev => ({
+        ...prev,
+        [workerName]: `[${now}] Inference Test: 6-vector tensor scored in 0.38ms → P(spike)=85.2%`
+      }));
+    } else if (workerName === 'worker/dispatcher') {
+      setWorkerTestResult(prev => ({
+        ...prev,
+        [workerName]: `[${now}] Pre-Warm Ping sent: X-Pre-Warm-Ping: true → Target Isolate WARMED`
+      }));
+    } else {
+      setWorkerTestResult(prev => ({
+        ...prev,
+        [workerName]: `[${now}] Scheduled Cron Tick: Synthetic ping logged (Interval 2.0s)`
+      }));
+    }
+  };
+
+  const handlePreWarmFleetClick = () => {
+    if (onPreWarmFleet) {
+      onPreWarmFleet();
+      setFleetNotice('🔥 Pre-warm pings issued to all worker isolates! Fleet status: 100% WARM.');
+      setTimeout(() => setFleetNotice(null), 4000);
+    }
+  };
+
+  const handleEvictFleetClick = () => {
+    if (onEvictFleet) {
+      onEvictFleet();
+      setFleetNotice('❄️ Forced memory reclamation (>3.5s). All worker isolates evicted to cold state.');
+      setTimeout(() => setFleetNotice(null), 4000);
+    }
+  };
 
   return (
     <div className="space-y-4 mb-5">
@@ -83,7 +156,7 @@ export const ServerlessFunctionStatus: React.FC<ServerlessFunctionStatusProps> =
           <Server className="w-4 h-4 text-teal-400" />
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-100">
-              Serverless Edge Fleet Topology
+              Serverless Edge Fleet Topology & Control Matrix
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
               Service specifications, bindings, and eviction parameters across the engine micro-workers.
@@ -100,9 +173,48 @@ export const ServerlessFunctionStatus: React.FC<ServerlessFunctionStatusProps> =
         </div>
       </div>
 
+      {/* Fleet Controls Action Bar */}
+      <div className="surface-card p-3 flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#0d1219]">
+        <div className="flex items-center space-x-2">
+          <ShieldCheck className="w-4 h-4 text-teal-400" />
+          <span className="text-xs font-semibold text-slate-200">
+            Fleet Operations Bar:
+          </span>
+          <span className="text-xs font-mono text-slate-400">
+            Active Warm: {isolates.filter(i => i.status === 'warm' || i.status === 'WARM').length} / {isolates.length || 1}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handlePreWarmFleetClick}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-sm bg-teal-700 hover:bg-teal-600 text-white text-xs font-medium transition-colors"
+          >
+            <Flame className="w-3.5 h-3.5" />
+            <span>Pre-Warm Entire Edge Fleet</span>
+          </button>
+
+          <button
+            onClick={handleEvictFleetClick}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-sm bg-[#18202d] hover:bg-rose-950/60 text-slate-300 hover:text-rose-200 border border-[#2e384d] hover:border-rose-700/60 text-xs font-medium transition-colors"
+          >
+            <Snowflake className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Evict Fleet Memory (&gt;3.5s)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Fleet Notification */}
+      {fleetNotice && (
+        <div className="p-2.5 rounded-sm bg-teal-950/80 border border-teal-800/80 text-teal-200 text-xs font-mono flex items-center justify-between animate-fade-in">
+          <span>{fleetNotice}</span>
+          <span className="text-[10px] text-teal-400 font-sans">Synced with CRT terminal</span>
+        </div>
+      )}
+
       {/* 4 Worker Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {workers.map((w) => {
+        {workers.map((w, idx) => {
           const Icon = w.icon;
           return (
             <div key={w.name} className="surface-card p-4 flex flex-col justify-between space-y-3">
@@ -148,14 +260,51 @@ export const ServerlessFunctionStatus: React.FC<ServerlessFunctionStatusProps> =
                     <span>{w.memory}</span>
                   </div>
                 </div>
+
+                {/* Live Worker Invocation Test Feedback */}
+                {workerTestResult[w.name] && (
+                  <div className="mt-2.5 p-2 rounded-sm bg-[#0a0d14] border border-teal-800/60 text-teal-300 text-[11px] font-mono">
+                    {workerTestResult[w.name]}
+                  </div>
+                )}
               </div>
 
-              {/* Dev Command */}
-              <div className="pt-2 border-t border-[#232c3d] flex items-center justify-between text-[11px] font-mono text-slate-400">
-                <span className="text-slate-500">Run:</span>
-                <span className="text-slate-300 bg-[#0d1219] px-2 py-0.5 rounded-sm border border-[#232c3d] truncate max-w-[280px]">
-                  {w.devCommand}
-                </span>
+              {/* Action Buttons: Test Invocation, Inspect Code, Copy Wrangler Command */}
+              <div className="pt-2 border-t border-[#232c3d] space-y-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleRunTest(w.name)}
+                    className="flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded-sm bg-teal-800/70 hover:bg-teal-700 text-white text-xs font-medium transition-colors"
+                  >
+                    <Play className="w-3 h-3 text-teal-300" />
+                    <span>Simulate Invocation</span>
+                  </button>
+
+                  <button
+                    onClick={() => onNavigateTab?.('code', w.snippetIndex)}
+                    className="flex items-center space-x-1 px-2.5 py-1.5 rounded-sm bg-[#10151f] hover:bg-[#18202d] text-slate-300 hover:text-teal-300 border border-[#232c3d] text-xs font-medium transition-colors"
+                    title="Inspect code handler"
+                  >
+                    <FileCode className="w-3.5 h-3.5 text-teal-400" />
+                    <span>Code</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleCopy(w.devCommand, idx)}
+                    className="flex items-center space-x-1 px-2.5 py-1.5 rounded-sm bg-[#10151f] hover:bg-[#18202d] text-slate-300 border border-[#232c3d] text-xs font-mono transition-colors"
+                    title="Copy wrangler dev command"
+                  >
+                    {copiedIndex === idx ? (
+                      <Check className="w-3.5 h-3.5 text-teal-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="text-[10px] font-mono text-slate-500 truncate">
+                  Command: {w.devCommand}
+                </div>
               </div>
             </div>
           );

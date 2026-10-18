@@ -8,16 +8,27 @@ import {
   Terminal, 
   RefreshCw,
   Copy,
-  Check
+  Check,
+  FastForward,
+  Snowflake,
+  Trash2
 } from 'lucide-react';
 
-export const LiveWorkerProbe: React.FC = () => {
+interface LiveWorkerProbeProps {
+  onProbeResult?: (result: any) => void;
+}
+
+export const LiveWorkerProbe: React.FC<LiveWorkerProbeProps> = ({ onProbeResult }) => {
   const [targetUrl, setTargetUrl] = useState('http://127.0.0.1:8787');
   const [isPreWarmPing, setIsPreWarmPing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRapidRunning, setIsRapidRunning] = useState(false);
+  const [rapidProgress, setRapidProgress] = useState<number | null>(null);
   const [responseLog, setResponseLog] = useState<any | null>(null);
   const [isLiveConnected, setIsLiveConnected] = useState<boolean | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [isJsonCopied, setIsJsonCopied] = useState(false);
+  const [probeNotice, setProbeNotice] = useState<string | null>(null);
 
   // Simulated probe fallback isolate state
   const [simulatedIsolate, setSimulatedIsolate] = useState({
@@ -26,19 +37,31 @@ export const LiveWorkerProbe: React.FC = () => {
     count: 0
   });
 
+  const showNotice = (msg: string) => {
+    setProbeNotice(msg);
+    setTimeout(() => setProbeNotice(null), 3500);
+  };
+
   const handleCopyCmd = () => {
     navigator.clipboard.writeText('npx wrangler dev worker/target/index.ts --port 8787');
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleProbe = async () => {
-    setIsLoading(true);
+  const handleCopyJson = () => {
+    if (responseLog) {
+      navigator.clipboard.writeText(JSON.stringify(responseLog.payload, null, 2));
+      setIsJsonCopied(true);
+      setTimeout(() => setIsJsonCopied(false), 2000);
+    }
+  };
+
+  const executeSingleProbe = async (preWarm = isPreWarmPing): Promise<any> => {
     const start = performance.now();
 
     try {
       const headers: Record<string, string> = {};
-      if (isPreWarmPing) {
+      if (preWarm) {
         headers['X-Pre-Warm-Ping'] = 'true';
       }
 
@@ -50,7 +73,7 @@ export const LiveWorkerProbe: React.FC = () => {
       const data = await res.json();
       const clientDuration = Math.round(performance.now() - start);
 
-      setResponseLog({
+      const log = {
         source: 'real_cloudflare_worker',
         status: res.status,
         headers: {
@@ -58,8 +81,12 @@ export const LiveWorkerProbe: React.FC = () => {
         },
         payload: data,
         clientDurationMs: clientDuration
-      });
+      };
+
+      setResponseLog(log);
       setIsLiveConnected(true);
+      onProbeResult?.(log);
+      return log;
     } catch {
       // Offline fallback: Emulate response realistically
       const now = Date.now();
@@ -67,37 +94,76 @@ export const LiveWorkerProbe: React.FC = () => {
       const isCold = idleGap > 3500;
       const simulatedDuration = isCold ? 68 : 2;
 
+      const newIsoId = isCold ? 'iso_' + Math.random().toString(36).substring(2, 8) : simulatedIsolate.id;
+
       setSimulatedIsolate({
-        id: isCold ? 'iso_' + Math.random().toString(36).substring(2, 8) : simulatedIsolate.id,
+        id: newIsoId,
         lastActive: now,
         count: simulatedIsolate.count + 1
       });
 
-      setResponseLog({
+      const log = {
         source: 'local_emulation_fallback',
         status: 200,
         headers: {
-          'X-Isolate-ID': isCold ? 'new_cold_isolate' : simulatedIsolate.id,
+          'X-Isolate-ID': newIsoId,
           'X-Simulated-Notice': 'Local worker offline on :8787. Displaying deterministic fallback response.'
         },
         payload: {
-          service: 'weather-user-lookup',
+          service: targetUrl.includes('8788')
+            ? 'onnx-edge-inference'
+            : targetUrl.includes('8789')
+            ? 'prewarm-orchestrator'
+            : 'weather-user-lookup',
           city: 'San Francisco',
           temperature_c: 18.5,
           telemetry: {
-            isolate_id: isCold ? 'new_cold_isolate' : simulatedIsolate.id,
+            isolate_id: newIsoId,
             cold_boot: isCold,
             idle_gap_ms: idleGap,
             execution_duration_ms: simulatedDuration,
-            pre_warm_ping: isPreWarmPing
+            pre_warm_ping: preWarm
           }
         },
         clientDurationMs: simulatedDuration
-      });
+      };
+
+      setResponseLog(log);
       setIsLiveConnected(false);
-    } finally {
-      setIsLoading(false);
+      onProbeResult?.(log);
+      return log;
     }
+  };
+
+  const handleProbe = async () => {
+    setIsLoading(true);
+    await executeSingleProbe();
+    setIsLoading(false);
+  };
+
+  // Run 5x Rapid Burst Probe
+  const handleRapidProbe = async () => {
+    setIsRapidRunning(true);
+    setProbeNotice('⚡ Executing 5x Rapid Probes in sequence...');
+
+    for (let i = 1; i <= 5; i++) {
+      setRapidProgress(i);
+      await executeSingleProbe();
+      await new Promise(r => setTimeout(r, 200));
+    }
+
+    setIsRapidRunning(false);
+    setRapidProgress(null);
+    showNotice('✓ Completed 5x Rapid Probes! Observed: Probe #1 Cold Boot (68ms), Probes #2-5 Warm Hits (2ms).');
+  };
+
+  // Force Eviction (>3.5s)
+  const handleForceEvict = () => {
+    setSimulatedIsolate(prev => ({
+      ...prev,
+      lastActive: Date.now() - 5000 // >3500ms
+    }));
+    showNotice('❄️ Forced simulated isolate idle gap to 5,000ms. The very next probe is guaranteed to Cold Boot.');
   };
 
   return (
@@ -125,10 +191,18 @@ export const LiveWorkerProbe: React.FC = () => {
           }`}>
             {isLiveConnected === true
               ? 'Connected (HTTP 200)'
-              : 'Offline / Emulation Fallback'}
+              : 'Offline / Local Emulation Fallback'}
           </span>
         </div>
       </div>
+
+      {/* Notice Banner */}
+      {probeNotice && (
+        <div className="p-2.5 rounded-sm bg-teal-950/80 border border-teal-800/80 text-teal-200 text-xs font-mono flex items-center justify-between">
+          <span>{probeNotice}</span>
+          <span className="text-[10px] text-teal-400 font-sans">Diagnostics live</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         
@@ -147,9 +221,43 @@ export const LiveWorkerProbe: React.FC = () => {
                 placeholder="http://127.0.0.1:8787"
               />
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Local Wrangler dev server port configured in worker/target.
-            </p>
+            
+            {/* Quick Endpoint Switcher */}
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              <button
+                type="button"
+                onClick={() => setTargetUrl('http://127.0.0.1:8787')}
+                className={`px-2 py-0.5 rounded-sm text-[10px] font-mono border transition-colors ${
+                  targetUrl.includes('8787')
+                    ? 'bg-[#18202d] text-teal-300 border-teal-500/60'
+                    : 'bg-[#0d1219] text-slate-400 border-[#232c3d] hover:text-slate-200'
+                }`}
+              >
+                :8787 Target
+              </button>
+              <button
+                type="button"
+                onClick={() => setTargetUrl('http://127.0.0.1:8788')}
+                className={`px-2 py-0.5 rounded-sm text-[10px] font-mono border transition-colors ${
+                  targetUrl.includes('8788')
+                    ? 'bg-[#18202d] text-teal-300 border-teal-500/60'
+                    : 'bg-[#0d1219] text-slate-400 border-[#232c3d] hover:text-slate-200'
+                }`}
+              >
+                :8788 Predictor
+              </button>
+              <button
+                type="button"
+                onClick={() => setTargetUrl('http://127.0.0.1:8789')}
+                className={`px-2 py-0.5 rounded-sm text-[10px] font-mono border transition-colors ${
+                  targetUrl.includes('8789')
+                    ? 'bg-[#18202d] text-teal-300 border-teal-500/60'
+                    : 'bg-[#0d1219] text-slate-400 border-[#232c3d] hover:text-slate-200'
+                }`}
+              >
+                :8789 Dispatcher
+              </button>
+            </div>
           </div>
 
           <div className="p-3 rounded-sm bg-[#10151f] border border-[#232c3d] space-y-2 text-xs">
@@ -171,18 +279,43 @@ export const LiveWorkerProbe: React.FC = () => {
             </p>
           </div>
 
-          <button
-            onClick={handleProbe}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center space-x-2 py-2 rounded-sm bg-teal-700 hover:bg-teal-600 text-white text-xs font-medium transition-colors"
-          >
-            {isLoading ? (
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Send className="w-3.5 h-3.5" />
-            )}
-            <span>{isLoading ? 'Dispatching...' : 'Dispatch HTTP GET'}</span>
-          </button>
+          {/* Action Buttons */}
+          <div className="space-y-2">
+            <button
+              onClick={handleProbe}
+              disabled={isLoading || isRapidRunning}
+              className="w-full flex items-center justify-center space-x-2 py-2 rounded-sm bg-teal-700 hover:bg-teal-600 text-white text-xs font-medium transition-colors"
+            >
+              {isLoading ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Send className="w-3.5 h-3.5" />
+              )}
+              <span>{isLoading ? 'Dispatching...' : 'Dispatch Diagnostic HTTP GET'}</span>
+            </button>
+
+            <button
+              onClick={handleRapidProbe}
+              disabled={isLoading || isRapidRunning}
+              className="w-full flex items-center justify-center space-x-2 py-1.5 rounded-sm bg-[#18202d] hover:bg-[#222c3d] text-slate-200 border border-[#2e384d] text-xs font-medium transition-colors"
+            >
+              <FastForward className="w-3.5 h-3.5 text-teal-400" />
+              <span>
+                {isRapidRunning
+                  ? `Executing Probe ${rapidProgress}/5...`
+                  : 'Run 5× Rapid Burst Probe'}
+              </span>
+            </button>
+
+            <button
+              onClick={handleForceEvict}
+              disabled={isLoading || isRapidRunning}
+              className="w-full flex items-center justify-center space-x-2 py-1.5 rounded-sm bg-[#10151f] hover:bg-rose-950/60 text-slate-300 hover:text-rose-200 border border-[#232c3d] hover:border-rose-700/60 text-xs font-medium transition-colors"
+            >
+              <Snowflake className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Force Isolate Eviction (&gt;3.5s Idle)</span>
+            </button>
+          </div>
 
           {/* Local Run Guidance */}
           <div className="pt-2 border-t border-[#232c3d] space-y-2 text-xs">
@@ -213,6 +346,23 @@ export const LiveWorkerProbe: React.FC = () => {
 
               {responseLog && (
                 <div className="flex items-center space-x-2 text-xs font-mono">
+                  <button
+                    onClick={handleCopyJson}
+                    className="flex items-center space-x-1 px-2 py-0.5 rounded-sm bg-[#10151f] hover:bg-[#18202d] border border-[#232c3d] text-[11px] text-slate-300"
+                    title="Copy response JSON"
+                  >
+                    {isJsonCopied ? <Check className="w-3 h-3 text-teal-400" /> : <Copy className="w-3 h-3 text-slate-400" />}
+                    <span>{isJsonCopied ? 'Copied' : 'Copy'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setResponseLog(null)}
+                    className="p-1 rounded-sm bg-[#10151f] hover:bg-rose-950/60 border border-[#232c3d] text-slate-400 hover:text-rose-300"
+                    title="Clear response"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+
                   <span className={`px-2 py-0.5 rounded-sm ${
                     responseLog.status === 200 ? 'bg-emerald-950/80 text-emerald-300' : 'bg-rose-950/80 text-rose-300'
                   }`}>
@@ -286,14 +436,14 @@ export const LiveWorkerProbe: React.FC = () => {
             ) : (
               <div className="h-56 flex flex-col items-center justify-center text-xs text-slate-500 font-mono space-y-2 border border-dashed border-[#232c3d] rounded-sm">
                 <Cpu className="w-6 h-6 text-slate-600" />
-                <span>No HTTP requests dispatched yet. Click "Dispatch HTTP GET" above.</span>
+                <span>No HTTP requests dispatched yet. Click "Dispatch Diagnostic HTTP GET" or "Run 5× Rapid Burst".</span>
               </div>
             )}
           </div>
 
           <div className="pt-2 border-t border-[#232c3d] text-[11px] text-slate-500 font-mono flex justify-between">
-            <span>Target: worker/target/index.ts</span>
-            <span>Cold Threshold: &gt;3,500ms</span>
+            <span>Target: {targetUrl}</span>
+            <span>Eviction Gap: &gt;3,500ms</span>
           </div>
         </div>
 
