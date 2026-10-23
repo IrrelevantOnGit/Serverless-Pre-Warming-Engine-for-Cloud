@@ -72,7 +72,7 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<VisualizerTab>('comparative');
   const [logFilter, setLogFilter] = useState<'all' | 'cold' | 'warm' | 'synthetic'>('all');
-  const [isLogScale, setIsLogScale] = useState<boolean>(true);
+  const [isLogScale, setIsLogScale] = useState<boolean>(false);
   const logEndRef = useRef<HTMLDivElement>(null);
 
   // Fallback if multiModeResult is not yet available
@@ -112,9 +112,10 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
   const buildComparativeLatencyData = () => {
     if (!activeModesData) return { labels: [], datasets: [] };
 
-    const noneLogs = activeModesData.none?.logs || [];
-    const naiveLogs = activeModesData.naive?.logs || [];
-    const predLogs = activeModesData.adaptive?.logs || [];
+    // Synchronize by real user requests across all 3 modes
+    const noneLogs = (activeModesData.none?.logs || []).filter((l) => !l.isSyntheticPing);
+    const naiveLogs = (activeModesData.naive?.logs || []).filter((l) => !l.isSyntheticPing);
+    const predLogs = (activeModesData.adaptive?.logs || []).filter((l) => !l.isSyntheticPing);
 
     const maxLen = Math.max(noneLogs.length, naiveLogs.length, predLogs.length);
     const labels = Array.from({ length: maxLen }, (_, i) => `#${i + 1}`);
@@ -129,7 +130,7 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
           backgroundColor: 'rgba(244, 63, 94, 0.08)',
           borderWidth: 2,
           pointBackgroundColor: noneLogs.map((l) => (l.isCold ? '#e11d48' : '#fda4af')),
-          pointRadius: noneLogs.map((l) => (l.isCold ? 4.5 : 2)),
+          pointRadius: noneLogs.map((l) => (l.isCold ? 5 : 2)),
           pointHoverRadius: 6,
           tension: 0.15,
           fill: false
@@ -140,8 +141,8 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
           borderColor: '#f59e0b',
           backgroundColor: 'rgba(245, 158, 11, 0.08)',
           borderWidth: 1.8,
-          pointBackgroundColor: '#f59e0b',
-          pointRadius: 2,
+          pointBackgroundColor: naiveLogs.map((l) => (l.isCold ? '#e11d48' : '#f59e0b')),
+          pointRadius: naiveLogs.map((l) => (l.isCold ? 5 : 2)),
           pointHoverRadius: 5,
           tension: 0.15,
           fill: false
@@ -152,8 +153,8 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
           borderColor: '#10b981',
           backgroundColor: 'rgba(16, 185, 129, 0.12)',
           borderWidth: 2.2,
-          pointBackgroundColor: predLogs.map((l) => (l.preWarmActionTaken ? '#34d399' : '#059669')),
-          pointRadius: predLogs.map((l) => (l.preWarmActionTaken ? 4.5 : 2.5)),
+          pointBackgroundColor: '#10b981',
+          pointRadius: 2.5,
           pointHoverRadius: 6,
           tension: 0.15,
           fill: true
@@ -296,7 +297,7 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
   });
 
   const singleChartData = {
-    labels: singleModeLogs.map((l) => `#${l.requestId}`),
+    labels: singleModeLogs.map((l) => (l.isSyntheticPing ? `⚡P#${l.requestId}` : `#${l.requestId}`)),
     datasets: [
       {
         label: 'Latency (ms)',
@@ -309,7 +310,7 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
         pointBackgroundColor: singleModeLogs.map((l) =>
           l.isSyntheticPing ? '#818cf8' : l.isCold ? '#e11d48' : '#059669'
         ),
-        pointRadius: singleModeLogs.map((l) => (l.isCold ? 4.5 : l.preWarmActionTaken ? 4.0 : 2.5)),
+        pointRadius: singleModeLogs.map((l) => (l.isCold ? 5 : l.isSyntheticPing ? 3.5 : 2.5)),
         pointHoverRadius: 6
       }
     ]
@@ -356,6 +357,7 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
   const lineChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: { duration: 300 },
     plugins: {
       legend: {
         position: 'top' as const,
@@ -388,8 +390,7 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
       },
       y: {
         type: isLogScale ? ('logarithmic' as const) : ('linear' as const),
-        min: isLogScale ? 1 : 0,
-        max: isLogScale ? 100 : 85,
+        ...(isLogScale ? { min: 1, max: 100 } : { min: 0, max: 85 }),
         grid: { color: 'rgba(255, 255, 255, 0.05)' },
         ticks: {
           color: '#94a3b8',
@@ -399,6 +400,9 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
       }
     }
   };
+
+  // Unique key to force Chart.js canvas re-mount when simulation data changes
+  const chartKey = `${multiModeResult?.timestamp || 'initial'}-${requestCount}-${preset}-${isLogScale ? 'log' : 'linear'}`;
 
   return (
     <div className="space-y-4 mb-6">
@@ -658,7 +662,11 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
             </div>
 
             <div className="h-64 w-full">
-              <Line data={buildComparativeLatencyData()} options={lineChartOptions} />
+              <Line 
+                key={`comp-line-${chartKey}`} 
+                data={buildComparativeLatencyData()} 
+                options={lineChartOptions} 
+              />
             </div>
           </div>
 
@@ -858,7 +866,11 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
             </div>
 
             <div className="h-60 w-full">
-              <Line data={singleChartData} options={lineChartOptions} />
+              <Line 
+                key={`single-line-${chartKey}-${activeTab}-${singleModeLogs.length}`} 
+                data={singleChartData} 
+                options={lineChartOptions} 
+              />
             </div>
           </div>
 
@@ -935,27 +947,27 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
                   <div className="flex items-center space-x-1.5 text-[11px] font-mono">
                     <button
                       onClick={() => setLogFilter('all')}
-                      className={`px-2 py-0.5 rounded-sm ${logFilter === 'all' ? 'bg-[#1e2736] text-teal-300' : 'text-slate-400'}`}
+                      className={`px-2 py-0.5 rounded-sm transition-colors ${logFilter === 'all' ? 'bg-[#1e2736] text-teal-300 font-bold' : 'text-slate-400 hover:text-slate-200'}`}
                     >
-                      All
+                      All ({singleModeLogs.length})
                     </button>
                     <button
                       onClick={() => setLogFilter('cold')}
-                      className={`px-2 py-0.5 rounded-sm ${logFilter === 'cold' ? 'bg-rose-950 text-rose-300' : 'text-slate-400'}`}
+                      className={`px-2 py-0.5 rounded-sm transition-colors ${logFilter === 'cold' ? 'bg-rose-950 text-rose-300 font-bold border border-rose-800/60' : 'text-slate-400 hover:text-slate-200'}`}
                     >
-                      Cold
+                      Cold ({singleModeLogs.filter((l) => l.isCold).length})
                     </button>
                     <button
                       onClick={() => setLogFilter('warm')}
-                      className={`px-2 py-0.5 rounded-sm ${logFilter === 'warm' ? 'bg-emerald-950 text-emerald-300' : 'text-slate-400'}`}
+                      className={`px-2 py-0.5 rounded-sm transition-colors ${logFilter === 'warm' ? 'bg-emerald-950 text-emerald-300 font-bold border border-emerald-800/60' : 'text-slate-400 hover:text-slate-200'}`}
                     >
-                      Warm
+                      Warm ({singleModeLogs.filter((l) => !l.isCold && !l.isSyntheticPing).length})
                     </button>
                     <button
                       onClick={() => setLogFilter('synthetic')}
-                      className={`px-2 py-0.5 rounded-sm ${logFilter === 'synthetic' ? 'bg-indigo-950 text-indigo-300' : 'text-slate-400'}`}
+                      className={`px-2 py-0.5 rounded-sm transition-colors ${logFilter === 'synthetic' ? 'bg-indigo-950 text-indigo-300 font-bold border border-indigo-800/60' : 'text-slate-400 hover:text-slate-200'}`}
                     >
-                      Ping
+                      Ping ({singleModeLogs.filter((l) => l.isSyntheticPing).length})
                     </button>
                   </div>
                 </div>
@@ -966,7 +978,7 @@ export const SimulationVisualizer: React.FC<SimulationVisualizerProps> = ({
                   ) : (
                     filteredLogs.map((log) => (
                       <div
-                        key={log.requestId}
+                        key={log.id || `${log.requestId}-${log.timestamp}`}
                         className="flex items-center space-x-2 text-slate-300 leading-tight"
                       >
                         <span className="text-slate-500 shrink-0">[{log.simulatedHour}:00 UTC]</span>

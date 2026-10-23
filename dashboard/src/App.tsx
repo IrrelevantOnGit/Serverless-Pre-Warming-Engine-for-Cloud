@@ -91,37 +91,17 @@ export function App() {
   };
 
   const handleRunBatch = () => {
-    setIsSimulating(true);
-    const newLogs = simulatorRef.current.runBatchSimulation(preset, requestCount);
-    const metrics = simulatorRef.current.computeMetrics();
-    const newIsolates = simulatorRef.current.getIsolates();
-    setLogs([...newLogs]);
-    setIsolates([...newIsolates]);
+    handleRunMultiModeSimulation(preset, requestCount);
+  };
 
-    setMultiModeResult((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        modes: {
-          ...prev.modes,
-          [currentMode]: {
-            mode: currentMode,
-            metrics,
-            logs: newLogs,
-            isolates: newIsolates
-          }
-        }
-      };
-    });
+  const handleSelectPreset = (newPreset: TrafficPreset) => {
+    setPreset(newPreset);
+    handleRunMultiModeSimulation(newPreset, requestCount);
+  };
 
-    setIsSimulating(false);
-    setIsRealDataMode(false);
-    terminalMirrorRef.current?.logExternalBatchSummary(
-      requestCount,
-      preset,
-      metrics.coldStartRatePercent,
-      metrics.avgLatencyMs
-    );
+  const handleChangeRequestCount = (newCount: number) => {
+    setRequestCount(newCount);
+    handleRunMultiModeSimulation(preset, newCount);
   };
 
   const handleRunMultiModeSimulation = (customPreset?: TrafficPreset, customCount?: number) => {
@@ -370,9 +350,9 @@ export function App() {
           <>
             <TrafficControls
               preset={preset}
-              onSelectPreset={setPreset}
+              onSelectPreset={handleSelectPreset}
               requestCount={requestCount}
-              onChangeRequestCount={setRequestCount}
+              onChangeRequestCount={handleChangeRequestCount}
               onRunSingle={handleRunSingle}
               onRunBatch={handleRunBatch}
               onRunComparison={handleRunComparison}
